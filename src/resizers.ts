@@ -1,0 +1,86 @@
+import { ResizerElements, MousePosition } from './types'
+
+export type ResizerDirection = 'horizontal' | 'vertical'
+
+export interface ResizerConfig {
+  direction: ResizerDirection
+  onResize?: (data: { previousSize: string; nextSize: string }) => void
+}
+
+export interface PanelSizes {
+  previousSize: string
+  nextSize: string
+}
+
+export interface ResizerFunction {
+  (mousePosition: MousePosition, elements: ResizerElements): PanelSizes | null
+  direction: ResizerDirection
+  onResize?: (data: { previousSize: string; nextSize: string }) => void
+}
+
+export const resizeElement = (config: ResizerConfig): ResizerFunction => {
+  const calculatePercentage = (
+    mousePosition: MousePosition,
+    containerRect: DOMRect,
+    direction: ResizerDirection
+  ): number => {
+    let percentage: number
+
+    if (direction === 'horizontal') {
+      percentage =
+        ((mousePosition.x - containerRect.left) / containerRect.width) * 100
+    } else {
+      percentage =
+        ((mousePosition.y - containerRect.top) / containerRect.height) * 100
+    }
+
+    return Math.max(0, Math.min(100, percentage))
+  }
+
+  const applyStyles = (
+    previous: HTMLElement,
+    next: HTMLElement,
+    direction: ResizerDirection,
+    percentage: number
+  ) => {
+    const previousSize = `${percentage}%`
+    const nextSize = `${100 - percentage}%`
+
+    if (direction === 'horizontal') {
+      previous.style.width = previousSize
+      next.style.width = nextSize
+    } else {
+      previous.style.height = previousSize
+      next.style.height = nextSize
+    }
+  }
+
+  const resizer = (mousePosition: MousePosition, elements: ResizerElements) => {
+    const { previous, next, container } = elements
+    const { direction, onResize } = config
+
+    const containerRect = container.getBoundingClientRect()
+    const percentage = calculatePercentage(
+      mousePosition,
+      containerRect,
+      direction
+    )
+
+    applyStyles(previous, next, direction, percentage)
+
+    const panelSizes = {
+      previousSize: `${percentage}%`,
+      nextSize: `${100 - percentage}%`
+    }
+
+    onResize?.(panelSizes)
+
+    return panelSizes
+  }
+
+  // Attach config properties directly to the function
+  resizer.direction = config.direction
+  resizer.onResize = config.onResize
+
+  return resizer as ResizerFunction
+}
