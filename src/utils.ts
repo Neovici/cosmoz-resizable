@@ -1,0 +1,13 @@
+import { MousePosition } from './types'
+
+export const getMousePosition = (e: MouseEvent | TouchEvent): MousePosition => {
+  if (e instanceof MouseEvent) {
+    return { x: e.clientX, y: e.clientY }
+  } else if (e.touches && e.touches.length > 0) {
+    return { x: e.touches[0].clientX, y: e.touches[0].clientY }
+  }
+  return {
+    x: 0,
+    y: 0
+  }
+}
