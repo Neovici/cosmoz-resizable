@@ -1,86 +1,80 @@
-import { ResizerElements, MousePosition } from './types'
+import {
+	ResizerDirection,
+	ResizeConfig,
+	ResizeHandler,
+	MousePosition,
+} from './types'
 
-export type ResizerDirection = 'horizontal' | 'vertical'
+const axis = (
+	position: MousePosition,
+	rect: DOMRect,
+	direction: ResizerDirection
+): number =>
+	direction === 'horizontal'
+		? position.x - rect.left
+		: position.y - rect.top
 
-export interface ResizerConfig {
-  direction: ResizerDirection
-  onResize?: (data: { previousSize: string; nextSize: string }) => void
+const size = (rect: DOMRect, direction: ResizerDirection): number =>
+	direction === 'horizontal' ? rect.width : rect.height
+
+const clamp = (value: number, min?: number, max?: number): number => {
+	let v = value
+	if (min !== undefined) v = Math.max(v, min)
+	if (max !== undefined) v = Math.min(v, max)
+	return Math.max(0, v)
 }
 
-export interface PanelSizes {
-  previousSize: string
-  nextSize: string
+const ratios = (clamped: number, containerSize: number): [number, number] => {
+	const safe = containerSize > 0 ? containerSize : 1
+	const prev = clamped / safe
+	return [prev, 1 - prev]
 }
 
-export interface ResizerFunction {
-  (mousePosition: MousePosition, elements: ResizerElements): PanelSizes | null
-  direction: ResizerDirection
-  onResize?: (data: { previousSize: string; nextSize: string }) => void
+const ensureRect = (
+	state: { rect: DOMRect | undefined; size: number },
+	elements: ResizeConfig['elements'],
+	direction: ResizerDirection
+): DOMRect => {
+	if (!state.rect) {
+		state.rect = elements.container.getBoundingClientRect()
+		state.size = size(state.rect, direction)
+	}
+	return state.rect
 }
 
-export const resizeElement = (config: ResizerConfig): ResizerFunction => {
-  const calculatePercentage = (
-    mousePosition: MousePosition,
-    containerRect: DOMRect,
-    direction: ResizerDirection
-  ): number => {
-    let percentage: number
+export const createFlexResize = (config: ResizeConfig): ResizeHandler => {
+	const state = { rect: undefined as DOMRect | undefined, size: 0 }
 
-    if (direction === 'horizontal') {
-      percentage =
-        ((mousePosition.x - containerRect.left) / containerRect.width) * 100
-    } else {
-      percentage =
-        ((mousePosition.y - containerRect.top) / containerRect.height) * 100
-    }
+	const onPhase = (
+		phase: 'move' | 'end',
+		mousePosition: MousePosition,
+		c: ResizeConfig
+	) => {
+		const rect = ensureRect(state, c.elements, c.direction)
+		const clamped = clamp(
+			axis(mousePosition, rect, c.direction),
+			c.minSize,
+			c.maxSize
+		)
+		const r = ratios(clamped, state.size)
+		if (phase === 'move') {
+			c.onResize?.({ ratios: r, px: clamped })
+		} else {
+			c.onResizeEnd?.({ ratios: r })
+			state.rect = undefined
+		}
+	}
 
-    return Math.max(0, Math.min(100, percentage))
-  }
-
-  const applyStyles = (
-    previous: HTMLElement,
-    next: HTMLElement,
-    direction: ResizerDirection,
-    percentage: number
-  ) => {
-    const previousSize = `${percentage}%`
-    const nextSize = `${100 - percentage}%`
-
-    if (direction === 'horizontal') {
-      previous.style.width = previousSize
-      next.style.width = nextSize
-    } else {
-      previous.style.height = previousSize
-      next.style.height = nextSize
-    }
-  }
-
-  const resizer = (mousePosition: MousePosition, elements: ResizerElements) => {
-    const { previous, next, container } = elements
-    const { direction, onResize } = config
-
-    const containerRect = container.getBoundingClientRect()
-    const percentage = calculatePercentage(
-      mousePosition,
-      containerRect,
-      direction
-    )
-
-    applyStyles(previous, next, direction, percentage)
-
-    const panelSizes = {
-      previousSize: `${percentage}%`,
-      nextSize: `${100 - percentage}%`
-    }
-
-    onResize?.(panelSizes)
-
-    return panelSizes
-  }
-
-  // Attach config properties directly to the function
-  resizer.direction = config.direction
-  resizer.onResize = config.onResize
-
-  return resizer as ResizerFunction
+	return (e) => {
+		const { phase, mousePosition } = e.detail
+		if (phase === 'start') {
+			state.rect = config.elements.container.getBoundingClientRect()
+			state.size = size(state.rect, config.direction)
+			config.onResizeStart?.()
+			return
+		}
+		if (phase === 'move' || phase === 'end') {
+			onPhase(phase, mousePosition, config)
+		}
+	}
 }
