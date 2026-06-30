@@ -1,92 +1,76 @@
 import { component, html, useState } from '@pionjs/pion'
-import { resizeElement } from '../src/index'
+import '../src/resizable-view'
 
 const BasicDemo = () => {
-  const [leftPanelSize, setLeftPanelSize] = useState()
-  const [rightPanelSize, setRightPanelSize] = useState()
+	const [ratios, setRatios] = useState([0.5, 0.5])
 
-  const onResize = ({ previousSize, nextSize }) => {
-    setLeftPanelSize(previousSize)
-    setRightPanelSize(nextSize)
-  }
+	return html`
+		<style>
+			.container {
+				height: 400px;
+				width: 600px;
+				border: 1px solid #ccc;
+				margin: 20px;
+			}
 
-  const horizontalResizer = resizeElement({
-    direction: 'horizontal',
-    onResize
-  })
+			.panel {
+				background: #f5f5f5;
+				border: 1px solid #ddd;
+				padding: 20px;
+				overflow: auto;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-family: Arial, sans-serif;
+			}
 
-  return html`
-    <style>
-      .container {
-        display: flex;
-        height: 400px;
-        width: 600px;
-        border: 1px solid #ccc;
-        margin: 20px;
-      }
+			.left-panel {
+				background: linear-gradient(45deg, #ff6b6b, #ffa726);
+				color: white;
+			}
 
-      .panel {
-        background: #f5f5f5;
-        border: 1px solid #ddd;
-        padding: 20px;
-        overflow: auto;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-family: Arial, sans-serif;
-        width: 50%;
-      }
+			.right-panel {
+				background: linear-gradient(45deg, #4ecdc4, #45b7d1);
+				color: white;
+			}
 
-      .left-panel {
-        background: linear-gradient(45deg, #ff6b6b, #ffa726);
-        color: white;
-      }
+			.stats {
+				margin: 20px;
+				padding: 10px;
+				background: #f9f9f9;
+				border-radius: 4px;
+				font-family: monospace;
+			}
 
-      .right-panel {
-        background: linear-gradient(45deg, #4ecdc4, #45b7d1);
-        color: white;
-      }
+			h1 {
+				margin: 20px;
+				font-family: Arial, sans-serif;
+			}
+		</style>
 
-      .stats {
-        margin: 20px;
-        padding: 10px;
-        background: #f9f9f9;
-        border-radius: 4px;
-        font-family: monospace;
-      }
+		<h1>ResizableView Demo - Horizontal Split</h1>
 
-      h1 {
-        margin: 20px;
-        font-family: Arial, sans-serif;
-      }
-    </style>
+		<div class="stats">
+			<p>Left Panel: ${Math.round(ratios[0] * 100)}%</p>
+			<p>Right Panel: ${Math.round(ratios[1] * 100)}%</p>
+		</div>
 
-    <h1>Pion Split Demo - Horizontal Split</h1>
-
-    <div class="stats">
-      <p>Left Panel Size: ${leftPanelSize || '50%'}</p>
-      <p>Right Panel Size: ${rightPanelSize || '50%'}</p>
-    </div>
-
-    <div class="container">
-      <div class="panel left-panel">
-        <div>
-          <h3>Left Panel</h3>
-        </div>
-      </div>
-
-      <cosmoz-resizable .resizer=${horizontalResizer}></cosmoz-resizable>
-
-      <div class="panel right-panel">
-        <div>
-          <h3>Right Panel</h3>
-        </div>
-      </div>
-    </div>
-  `
+		<cosmoz-resizable-view
+			class="container"
+			.initialSizes=${[0.5, 0.5]}
+			@split-resize=${(e) => setRatios(e.detail.ratios)}
+		>
+			<div class="panel left-panel">
+				<h3>Left Panel</h3>
+			</div>
+			<div class="panel right-panel">
+				<h3>Right Panel</h3>
+			</div>
+		</cosmoz-resizable-view>
+	`
 }
 
 customElements.define(
-  'basic-demo',
-  component(BasicDemo, { useShadowDOM: true })
+	'basic-demo',
+	component(BasicDemo, { useShadowDOM: true })
 )
