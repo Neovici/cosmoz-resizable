@@ -4,12 +4,7 @@ import './cosmoz-resize-handle';
 import { localStorageAdapter, usePersist } from './hooks/use-persist';
 import { styles } from './resizable-view.css';
 import { createFlexResize } from './resizers';
-import {
-	PersistAdapter,
-	ResizeHandler,
-	ResizerDirection,
-	SizeSpec,
-} from './types';
+import { PersistAdapter, ResizerDirection, SizeSpec } from './types';
 import {
 	applySizes,
 	clampSplitPx,
@@ -44,7 +39,6 @@ const ResizableView = ({
 }: ResizableViewProps) => {
 	const host = useHost();
 	const ratioRef = useRef<number>(0.5);
-	const handlerRef = useRef<ResizeHandler | undefined>(undefined);
 
 	const adapter = useMemo<PersistAdapter | undefined>(() => {
 		if (typeof persist === 'string') return localStorageAdapter();
@@ -160,12 +154,10 @@ const ResizableView = ({
 				persistRatio?.(ratios[0]);
 			},
 		});
-		handlerRef.current = handler;
 		handle.addEventListener('resize', handler as EventListener);
 
 		return () => {
 			handle.removeEventListener('resize', handler as EventListener);
-			handlerRef.current = undefined;
 		};
 	}, [minSize, maxSize, persistRatio, direction]);
 
