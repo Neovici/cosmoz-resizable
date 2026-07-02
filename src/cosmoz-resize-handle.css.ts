@@ -1,6 +1,6 @@
-import { css } from '@pionjs/pion'
+import { css } from '@pionjs/pion';
 
-export const styles = css` <style>
+export const styles = css`
 	:host {
 		display: block;
 		background: var(--cosmoz-resize-handle-background, #e0e0e0);
@@ -30,4 +30,4 @@ export const styles = css` <style>
 		background: var(--cosmoz-resize-handle-dragging-background, #007acc);
 		cursor: grabbing;
 	}
-</style>`
+`;

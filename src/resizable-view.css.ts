@@ -1,6 +1,6 @@
-import { css } from '@pionjs/pion'
+import { css } from '@pionjs/pion';
 
-export const styles = css` <style>
+export const styles = css`
 	:host {
 		display: flex;
 		flex-direction: row;
@@ -23,4 +23,4 @@ export const styles = css` <style>
 	:host([data-direction='vertical']) ::slotted(*) {
 		min-width: auto;
 	}
-</style>`
+`;
