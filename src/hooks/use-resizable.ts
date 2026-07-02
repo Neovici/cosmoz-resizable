@@ -1,58 +1,53 @@
-import { useEffect, useMemo, useRef } from '@pionjs/pion'
-import { useHost } from '@neovici/cosmoz-utils/hooks/use-host'
-import { createFlexResize } from '../resizers'
+import { useEffect, useHost, useMemo, useRef } from '@pionjs/pion';
+import { createFlexResize } from '../resizers';
+import { PersistAdapter, ResizerDirection, SizeSpec } from '../types';
 import {
 	applySizes,
-	resolveBounds,
-	computeInitial,
 	clampSplitPx,
-} from '../utils'
-import { usePersist, localStorageAdapter } from './use-persist'
-import {
-	ResizerDirection,
-	SizeSpec,
-	PersistAdapter,
-} from '../types'
+	computeInitial,
+	resolveBounds,
+} from '../utils';
+import { localStorageAdapter, usePersist } from './use-persist';
 
 interface UseResizableOpts {
-	direction?: ResizerDirection
-	initialSizes?: [SizeSpec, SizeSpec]
-	minSize?: SizeSpec | [SizeSpec, SizeSpec]
-	maxSize?: SizeSpec | [SizeSpec, SizeSpec]
-	persist?: string | PersistAdapter
-	activeTab?: string
-	previousSelector?: string
-	nextSelector?: string
+	direction?: ResizerDirection;
+	initialSizes?: [SizeSpec, SizeSpec];
+	minSize?: SizeSpec | [SizeSpec, SizeSpec];
+	maxSize?: SizeSpec | [SizeSpec, SizeSpec];
+	persist?: string | PersistAdapter;
+	activeTab?: string;
+	previousSelector?: string;
+	nextSelector?: string;
 }
 
 const containerSizeOf = (
 	el: HTMLElement,
-	direction: ResizerDirection
+	direction: ResizerDirection,
 ): number => {
-	const rect = el.getBoundingClientRect()
-	return direction === 'horizontal' ? rect.width : rect.height
-}
+	const rect = el.getBoundingClientRect();
+	return direction === 'horizontal' ? rect.width : rect.height;
+};
 
 const resolvePanels = (
 	root: ShadowRoot,
 	prevSel: string,
-	nextSel: string
+	nextSel: string,
 ): { previous: HTMLElement; next: HTMLElement } | undefined => {
-	const previous = root.querySelector(prevSel) as HTMLElement | null
-	const next = root.querySelector(nextSel) as HTMLElement | null
-	if (!previous || !next) return undefined
-	return { previous, next }
-}
+	const previous = root.querySelector(prevSel) as HTMLElement | null;
+	const next = root.querySelector(nextSel) as HTMLElement | null;
+	if (!previous || !next) return undefined;
+	return { previous, next };
+};
 
 interface HandlerOpts {
-	previous: HTMLElement
-	next: HTMLElement
-	container: HTMLElement
-	direction: ResizerDirection
-	bounds: ReturnType<typeof resolveBounds>
-	containerSize: number
-	ratioRef: { current: number }
-	persistRatio: ((v: number) => void) | undefined
+	previous: HTMLElement;
+	next: HTMLElement;
+	container: HTMLElement;
+	direction: ResizerDirection;
+	bounds: ReturnType<typeof resolveBounds>;
+	containerSize: number;
+	ratioRef: { current: number | undefined };
+	persistRatio: ((v: number) => void) | undefined;
 }
 
 const buildHandler = ({
@@ -71,38 +66,39 @@ const buildHandler = ({
 		minSize: bounds.prevMin,
 		maxSize: bounds.prevMax,
 		onResize: ({ ratios: r, px }) => {
-			applySizes(previous, next, px, containerSize)
-			ratioRef.current = r[0]
+			applySizes(previous, next, px, containerSize);
+			ratioRef.current = r[0];
 		},
 		onResizeEnd: ({ ratios: r }) => {
-			persistRatio?.(r[0])
+			persistRatio?.(r[0]);
 		},
-	})
+	});
 
 const initialSplitPx = (
 	initialSizes: [SizeSpec, SizeSpec],
 	adapter: PersistAdapter | undefined,
 	persistKey: string | undefined,
 	bounds: ReturnType<typeof resolveBounds>,
-	containerSize: number
+	containerSize: number,
 ): number => {
-	const restored = adapter?.get?.(persistKey ?? '')
-	if (restored !== undefined) return clampSplitPx(restored * containerSize, bounds)
-	return computeInitial(initialSizes, bounds, containerSize)
-}
+	const restored = adapter?.get?.(persistKey ?? '');
+	if (restored !== undefined)
+		{return clampSplitPx(restored * containerSize, bounds);}
+	return computeInitial(initialSizes, bounds, containerSize);
+};
 
 const attachHandle = (
 	container: HTMLElement,
 	next: HTMLElement,
 	direction: ResizerDirection,
-	handler: EventListener
+	handler: EventListener,
 ): HTMLElement => {
-	const handle = document.createElement('cosmoz-resize-handle') as HTMLElement
-	handle.setAttribute('data-direction', direction)
-	container.insertBefore(handle, next)
-	handle.addEventListener('resize', handler)
-	return handle
-}
+	const handle = document.createElement('cosmoz-resize-handle') as HTMLElement;
+	handle.setAttribute('data-direction', direction);
+	container.insertBefore(handle, next);
+	handle.addEventListener('resize', handler);
+	return handle;
+};
 
 const useResizable = ({
 	direction = 'horizontal',
@@ -114,47 +110,47 @@ const useResizable = ({
 	previousSelector = '#list',
 	nextSelector = '#queue',
 }: UseResizableOpts) => {
-	const host = useHost()
-	const ratioRef = useRef<number>(0.5)
+	const host = useHost();
+	const ratioRef = useRef<number>(0.5);
 
 	const adapter = useMemo<PersistAdapter | undefined>(() => {
-		if (typeof persist === 'string') return localStorageAdapter()
-		if (persist && typeof persist === 'object') return persist
-		return undefined
-	}, [persist])
+		if (typeof persist === 'string') return localStorageAdapter();
+		if (persist && typeof persist === 'object') return persist;
+		return undefined;
+	}, [persist]);
 
 	const persistKey = useMemo<string | undefined>(() => {
-		if (typeof persist === 'string') return persist
-		if (persist && typeof persist === 'object') return 'default'
-		return undefined
-	}, [persist])
+		if (typeof persist === 'string') return persist;
+		if (persist && typeof persist === 'object') return 'default';
+		return undefined;
+	}, [persist]);
 
 	const persistRatio = usePersist(adapter, persistKey, (value) => {
-		ratioRef.current = value
-	})
+		ratioRef.current = value;
+	});
 
 	useEffect(() => {
-		if (activeTab !== undefined && activeTab !== 'split') return
+		if (activeTab !== undefined && activeTab !== 'split') return;
 
-		const root = host.shadowRoot
-		if (!root) return
-		const panels = resolvePanels(root, previousSelector, nextSelector)
-		if (!panels) return
+		const root = host.shadowRoot;
+		if (!root) return;
+		const panels = resolvePanels(root, previousSelector, nextSelector);
+		if (!panels) return;
 
-		const { previous, next } = panels
-		const container = previous.parentElement!
+		const { previous, next } = panels;
+		const container = previous.parentElement!;
 
-		const containerSize = containerSizeOf(container, direction)
-		const bounds = resolveBounds(minSize, maxSize, containerSize)
+		const containerSize = containerSizeOf(container, direction);
+		const bounds = resolveBounds(minSize, maxSize, containerSize);
 		const splitPx = initialSplitPx(
 			initialSizes,
 			adapter,
 			persistKey,
 			bounds,
-			containerSize
-		)
-		const { ratios } = applySizes(previous, next, splitPx, containerSize)
-		ratioRef.current = ratios[0]
+			containerSize,
+		);
+		const { ratios } = applySizes(previous, next, splitPx, containerSize);
+		ratioRef.current = ratios[0];
 
 		const handler = buildHandler({
 			previous,
@@ -165,20 +161,20 @@ const useResizable = ({
 			containerSize,
 			ratioRef,
 			persistRatio,
-		})
+		});
 		const handle = attachHandle(
 			container,
 			next,
 			direction,
-			handler as EventListener
-		)
+			handler as EventListener,
+		);
 
 		return () => {
-			handle.removeEventListener('resize', handler as EventListener)
-			container.removeChild(handle)
-			previous.style.flexBasis = ''
-			next.style.flexBasis = ''
-		}
+			handle.removeEventListener('resize', handler as EventListener);
+			container.removeChild(handle);
+			previous.style.flexBasis = '';
+			next.style.flexBasis = '';
+		};
 	}, [
 		activeTab,
 		direction,
@@ -189,7 +185,7 @@ const useResizable = ({
 		persistRatio,
 		minSize,
 		maxSize,
-	])
-}
+	]);
+};
 
-export { useResizable }
+export { useResizable };
