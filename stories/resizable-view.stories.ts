@@ -41,12 +41,17 @@ export const BasicDemo: Story = {
 			expect(canvasElement.querySelector('#next')).not.toBeNull();
 		});
 
-		await step('Handle is rendered between panels', async () => {
-			await waitFor(() => {
-				const handle = canvasElement.querySelector('cosmoz-resize-handle');
-				expect(handle).not.toBeNull();
-			});
-		});
+		await step(
+			'Handle is rendered in shadow DOM between named slots',
+			async () => {
+				await waitFor(() => {
+					const handle = canvasElement.shadowRoot?.querySelector(
+						'cosmoz-resize-handle',
+					);
+					expect(handle).not.toBeNull();
+				});
+			},
+		);
 
 		await step('Panels get initial flex-basis from initialSizes', async () => {
 			await waitFor(() => {
@@ -77,8 +82,14 @@ export const VerticalDemo: Story = {
 		</cosmoz-resizable-view>`,
 	async play({ canvasElement, step }) {
 		await step('Renders with vertical direction', async () => {
+			const el = canvasElement.querySelector(
+				'cosmoz-resizable-view',
+			) as HTMLElement;
 			await waitFor(() => {
-				const handle = canvasElement.querySelector('cosmoz-resize-handle');
+				expect(el.getAttribute('data-direction')).toBe('vertical');
+			});
+			await waitFor(() => {
+				const handle = el.shadowRoot?.querySelector('cosmoz-resize-handle');
 				expect(handle?.getAttribute('data-direction')).toBe('vertical');
 			});
 		});
@@ -112,12 +123,17 @@ export const MultiplePanels: Story = {
 	async play({ canvasElement, step }) {
 		await step('Renders nested resizable views', async () => {
 			await waitFor(() => {
-				const outer = canvasElement.querySelector('cosmoz-resizable-view');
+				const outer = canvasElement.shadowRoot?.querySelector(
+					'cosmoz-resize-handle',
+				);
 				expect(outer).not.toBeNull();
 				const inner = canvasElement.querySelector(
 					'cosmoz-resizable-view cosmoz-resizable-view',
-				);
+				) as HTMLElement | null;
 				expect(inner).not.toBeNull();
+				expect(
+					inner?.shadowRoot?.querySelector('cosmoz-resize-handle'),
+				).not.toBeNull();
 			});
 		});
 	},

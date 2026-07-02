@@ -43,14 +43,6 @@ const ResizableView = ({
 	persist,
 }: ResizableViewProps) => {
 	const host = useHost();
-	const panelsRef = useRef<
-		| {
-				previous: HTMLElement;
-				next: HTMLElement;
-				handle: HTMLElement;
-		  }
-		| undefined
-	>(undefined);
 	const ratioRef = useRef<number>(0.5);
 	const handlerRef = useRef<ResizeHandler | undefined>(undefined);
 
@@ -68,51 +60,99 @@ const ResizableView = ({
 
 	const persistRatio = usePersist(adapter, persistKey, (value) => {
 		ratioRef.current = value;
-		const panels = panelsRef.current;
-		if (!panels) return;
+		const root = host.shadowRoot;
+		if (!root) return;
+		const previous = root
+			.querySelector<HTMLSlotElement>('slot[name="previous"]')
+			?.assignedElements()[0] as HTMLElement | undefined;
+		const next = root
+			.querySelector<HTMLSlotElement>('slot[name="next"]')
+			?.assignedElements()[0] as HTMLElement | undefined;
+		if (!previous || !next) return;
 		const containerSize = containerSizeOf(host, direction);
 		const { ratios } = applySizes(
-			panels.previous,
-			panels.next,
+			previous,
+			next,
 			value * containerSize,
 			containerSize,
 		);
 		dispatchSplitResize(host, ratios);
 	});
 
-	const applyInitial = (
-		previous: HTMLElement,
-		next: HTMLElement,
-		container: HTMLElement,
-	) => {
-		const containerSize = containerSizeOf(container, direction);
+	const onSlotChange = () => {
+		const root = host.shadowRoot;
+		if (!root) return;
+
+		const prevSlot = root.querySelector<HTMLSlotElement>(
+			'slot[name="previous"]',
+		);
+		const nextSlot = root.querySelector<HTMLSlotElement>('slot[name="next"]');
+		const defaultSlot = root.querySelector<HTMLSlotElement>('slot:not([name])');
+		if (!prevSlot || !nextSlot || !defaultSlot) return;
+
+		let prev = prevSlot.assignedElements()[0] as HTMLElement | undefined;
+		let next = nextSlot.assignedElements()[0] as HTMLElement | undefined;
+
+		const unassigned = defaultSlot
+			.assignedElements()
+			.filter((el) => !el.hasAttribute('slot')) as HTMLElement[];
+
+		if (!prev && unassigned.length > 0) {
+			prev = unassigned.shift() as HTMLElement;
+			prev.setAttribute('slot', 'previous');
+		}
+		if (!next && unassigned.length > 0) {
+			next = unassigned.shift() as HTMLElement;
+			next.setAttribute('slot', 'next');
+		}
+
+		const handle = root.querySelector('cosmoz-resize-handle');
+		if (!prev || !next || !handle) return;
+
+		const containerSize = containerSizeOf(host, direction);
 		const bounds = resolveBounds(minSize, maxSize, containerSize);
 		const restored = adapter?.get?.(persistKey ?? '');
 		const splitPx =
 			restored !== undefined
 				? clampSplitPx(restored * containerSize, bounds)
 				: computeInitial(initialSizes, bounds, containerSize);
-		const { ratios } = applySizes(previous, next, splitPx, containerSize);
+		const { ratios } = applySizes(prev, next, splitPx, containerSize);
 		ratioRef.current = ratios[0];
 		dispatchSplitResize(host, ratios);
 	};
 
-	const wireHandler = () => {
-		const panels = panelsRef.current;
-		if (!panels) return;
-		const containerSize = containerSizeOf(host, direction);
-		const bounds = resolveBounds(minSize, maxSize, containerSize);
+	useEffect(() => {
+		host.setAttribute('data-direction', direction);
+		const root = host.shadowRoot;
+		const handle = root?.querySelector('cosmoz-resize-handle');
+		if (handle) handle.setAttribute('data-direction', direction);
+	}, [direction]);
+
+	useEffect(() => {
+		const root = host.shadowRoot;
+		if (!root) return;
+		const previous = root
+			.querySelector<HTMLSlotElement>('slot[name="previous"]')
+			?.assignedElements()[0] as HTMLElement | undefined;
+		const next = root
+			.querySelector<HTMLSlotElement>('slot[name="next"]')
+			?.assignedElements()[0] as HTMLElement | undefined;
+		const handle = root.querySelector('cosmoz-resize-handle');
+		if (!previous || !next || !handle) return;
+
+		const bounds = resolveBounds(
+			minSize,
+			maxSize,
+			containerSizeOf(host, direction),
+		);
 		const handler = createFlexResize({
-			elements: {
-				previous: panels.previous,
-				next: panels.next,
-				container: host,
-			},
+			elements: { previous, next, container: host },
 			direction,
 			minSize: bounds.prevMin,
 			maxSize: bounds.prevMax,
 			onResize: ({ ratios, px }) => {
-				applySizes(panels.previous, panels.next, px, containerSize);
+				const cs = containerSizeOf(host, direction);
+				applySizes(previous, next, px, cs);
 				ratioRef.current = ratios[0];
 				dispatchSplitResize(host, ratios);
 			},
@@ -121,58 +161,18 @@ const ResizableView = ({
 			},
 		});
 		handlerRef.current = handler;
-		panels.handle.addEventListener('resize', handler as EventListener);
-	};
+		handle.addEventListener('resize', handler as EventListener);
 
-	const unwireHandler = () => {
-		const panels = panelsRef.current;
-		const handler = handlerRef.current;
-		if (panels && handler) {
-			panels.handle.removeEventListener('resize', handler as EventListener);
-		}
-		handlerRef.current = undefined;
-	};
-
-	const setupPanels = () => {
-		const children = (Array.from(host.children) as HTMLElement[]).filter(
-			(el) => el.tagName.toLowerCase() !== 'cosmoz-resize-handle',
-		);
-		if (children.length < 2) return;
-
-		const [previous, next] = children;
-		let handle = host.querySelector(
-			'cosmoz-resize-handle',
-		) as HTMLElement | null;
-		if (!handle) {
-			handle = document.createElement('cosmoz-resize-handle') as HTMLElement;
-			host.insertBefore(handle, next);
-		} else if (handle !== previous.nextElementSibling) {
-			host.insertBefore(handle, next);
-		}
-		handle.setAttribute('data-direction', direction);
-		panelsRef.current = { previous, next, handle };
-		applyInitial(previous, next, host);
-		unwireHandler();
-		wireHandler();
-	};
-
-	useEffect(() => {
-		host.setAttribute('data-direction', direction);
-		const panels = panelsRef.current;
-		if (panels) {
-			panels.handle.setAttribute('data-direction', direction);
-		}
-	}, [direction]);
-
-	useEffect(() => {
-		const panels = panelsRef.current;
-		if (!panels) return;
-		unwireHandler();
-		wireHandler();
-		return unwireHandler;
+		return () => {
+			handle.removeEventListener('resize', handler as EventListener);
+			handlerRef.current = undefined;
+		};
 	}, [minSize, maxSize, persistRatio, direction]);
 
-	return html`<slot @slotchange=${() => setupPanels()}></slot>`;
+	return html`<slot hidden @slotchange=${onSlotChange}></slot
+		><slot name="previous" @slotchange=${onSlotChange}></slot
+		><cosmoz-resize-handle direction=${direction}></cosmoz-resize-handle
+		><slot name="next" @slotchange=${onSlotChange}></slot>`;
 };
 
 customElements.define(

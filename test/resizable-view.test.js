@@ -9,20 +9,54 @@ describe('cosmoz-resizable-view', () => {
 		expect(el.tagName.toLowerCase()).to.equal('cosmoz-resizable-view');
 	});
 
-	it('inserts a handle between 2 slotted children', async () => {
+	it('renders a handle in shadow DOM between named slots', async () => {
 		const el = await fixture(
 			html`<cosmoz-resizable-view>
 				<div id="prev" style="background:red">prev</div>
 				<div id="next" style="background:blue">next</div>
 			</cosmoz-resizable-view>`,
 		);
-		await waitUntil(() => el.querySelector('cosmoz-resize-handle'), undefined, {
-			timeout: 3000,
-		});
-		const handle = el.querySelector('cosmoz-resize-handle');
+		await waitUntil(
+			() => el.shadowRoot.querySelector('cosmoz-resize-handle'),
+			undefined,
+			{ timeout: 3000 },
+		);
+		const handle = el.shadowRoot.querySelector('cosmoz-resize-handle');
 		expect(handle).to.exist;
-		const prev = el.querySelector('#prev');
-		expect(handle).to.equal(prev.nextElementSibling);
+		const prevSlot = el.shadowRoot.querySelector('slot[name="previous"]');
+		const nextSlot = el.shadowRoot.querySelector('slot[name="next"]');
+		expect(prevSlot).to.exist;
+		expect(nextSlot).to.exist;
+		const prevAssigned = prevSlot.assignedElements()[0];
+		expect(prevAssigned?.id).to.equal('prev');
+		expect(prevAssigned?.getAttribute('slot')).to.equal('previous');
+		const nextAssigned = nextSlot.assignedElements()[0];
+		expect(nextAssigned?.id).to.equal('next');
+		expect(nextAssigned?.getAttribute('slot')).to.equal('next');
+	});
+
+	it('respects existing slot attributes', async () => {
+		const el = await fixture(
+			html`<cosmoz-resizable-view>
+				<div id="prev" slot="previous">prev</div>
+				<div id="next" slot="next">next</div>
+			</cosmoz-resizable-view>`,
+		);
+		await waitUntil(
+			() =>
+				el.shadowRoot.querySelector('slot[name="previous"]').assignedElements()
+					.length > 0,
+			undefined,
+			{ timeout: 3000 },
+		);
+		const prevAssigned = el.shadowRoot
+			.querySelector('slot[name="previous"]')
+			.assignedElements()[0];
+		expect(prevAssigned?.id).to.equal('prev');
+		const nextAssigned = el.shadowRoot
+			.querySelector('slot[name="next"]')
+			.assignedElements()[0];
+		expect(nextAssigned?.id).to.equal('next');
 	});
 
 	it('applies initial flex-basis to panels', async () => {
@@ -32,9 +66,11 @@ describe('cosmoz-resizable-view', () => {
 				<div id="next" style="background:blue">next</div>
 			</cosmoz-resizable-view>`,
 		);
-		await waitUntil(() => el.querySelector('cosmoz-resize-handle'), undefined, {
-			timeout: 3000,
-		});
+		await waitUntil(
+			() => el.shadowRoot.querySelector('cosmoz-resize-handle'),
+			undefined,
+			{ timeout: 3000 },
+		);
 		const prev = el.querySelector('#prev');
 		const next = el.querySelector('#next');
 		expect(prev.style.flexBasis).to.equal('30%');
@@ -54,9 +90,11 @@ describe('cosmoz-resizable-view', () => {
 				<div>next</div>
 			</cosmoz-resizable-view>`,
 		);
-		await waitUntil(() => el.querySelector('cosmoz-resize-handle'), undefined, {
-			timeout: 3000,
-		});
+		await waitUntil(
+			() => el.shadowRoot.querySelector('cosmoz-resize-handle'),
+			undefined,
+			{ timeout: 3000 },
+		);
 		expect(eventDetail).to.not.be.null;
 		expect(eventDetail.ratios).to.deep.equal([0.4, 0.6]);
 	});
@@ -71,9 +109,11 @@ describe('cosmoz-resizable-view', () => {
 				<div id="next">next</div>
 			</cosmoz-resizable-view>`,
 		);
-		await waitUntil(() => el.querySelector('cosmoz-resize-handle'), undefined, {
-			timeout: 3000,
-		});
+		await waitUntil(
+			() => el.shadowRoot.querySelector('cosmoz-resize-handle'),
+			undefined,
+			{ timeout: 3000 },
+		);
 		const prev = el.querySelector('#prev');
 		expect(parseFloat(prev.style.flexBasis)).to.equal(20);
 	});

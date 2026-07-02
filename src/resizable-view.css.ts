@@ -23,4 +23,8 @@ export const styles = css`
 	:host([data-direction='vertical']) ::slotted(*) {
 		min-width: auto;
 	}
+
+	cosmoz-resize-handle {
+		flex: 0 0 auto;
+	}
 `;
