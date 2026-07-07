@@ -138,3 +138,66 @@ export const MultiplePanels: Story = {
 		});
 	},
 };
+
+export const ListDetailsSplit: Story = {
+	render: () =>
+		html`<cosmoz-resizable-view
+			style="display:flex; width:800px; height:300px; border:1px solid #ccc;"
+			.initialSizes=${[0.25, 0.75]}
+			.minSize=${[300, undefined]}
+		>
+			<div
+				id="list"
+				style="background:#ff6b6b; display:flex; align-items:center; justify-content:center; color:white;"
+			>
+				<h3>List (25% or 300px min)</h3>
+			</div>
+			<div
+				id="details"
+				style="background:#4ecdc4; display:flex; align-items:center; justify-content:center; color:white;"
+			>
+				<h3>Details</h3>
+			</div>
+		</cosmoz-resizable-view>`,
+	async play({ canvasElement, step }) {
+		await step('Left panel floored at 300px (25% would be 200px)', async () => {
+			await waitFor(() => {
+				const list = canvasElement.querySelector('#list') as HTMLElement;
+				// 800px * 0.25 = 200px, but minSize=300 floors it
+				// 300px / 800px ≈ 37.5%
+				expect(parseFloat(list.style.flexBasis)).toBeCloseTo(37.5, 0);
+			});
+		});
+	},
+};
+
+export const CappedInitialSize: Story = {
+	render: () =>
+		html`<cosmoz-resizable-view
+			style="display:flex; width:1000px; height:300px; border:1px solid #ccc;"
+			.initialSizes=${[[0.4, '360px'], 0.6]}
+		>
+			<div
+				id="list"
+				style="background:#ff6b6b; display:flex; align-items:center; justify-content:center; color:white;"
+			>
+				<h3>List (40% or 360px max)</h3>
+			</div>
+			<div
+				id="details"
+				style="background:#4ecdc4; display:flex; align-items:center; justify-content:center; color:white;"
+			>
+				<h3>Details</h3>
+			</div>
+		</cosmoz-resizable-view>`,
+	async play({ canvasElement, step }) {
+		await step('Left panel capped at 360px (40% would be 400px)', async () => {
+			await waitFor(() => {
+				const list = canvasElement.querySelector('#list') as HTMLElement;
+				// 1000px * 0.4 = 400px, but cap is 360px
+				// 360px / 1000px ≈ 36%
+				expect(parseFloat(list.style.flexBasis)).toBeCloseTo(36, 0);
+			});
+		});
+	},
+};
