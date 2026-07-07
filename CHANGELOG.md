@@ -1,4 +1,4 @@
-# @neovici/resizable
+# @neovici/cosmoz-resizable
 
 ## 1.1.0
 

@@ -1,4 +1,4 @@
-# @neovici/resizable
+# @neovici/cosmoz-resizable
 
 A pionjs web component package for resizable split layouts.
 
