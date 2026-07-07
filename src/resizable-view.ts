@@ -1,5 +1,6 @@
 import { component, useEffect, useHost, useMemo, useRef } from '@pionjs/pion';
 import { html } from 'lit-html';
+import { ref } from 'lit-html/directives/ref.js';
 import { localStorageAdapter, usePersist } from './hooks/use-persist';
 import { styles } from './resizable-view.css';
 import './resize-handle';
@@ -39,6 +40,9 @@ const ResizableView = ({
 }: ResizableViewProps) => {
 	const host = useHost();
 	const ratioRef = useRef<number>(0.5);
+	const handleRef = useRef<HTMLElement>();
+	const prevSlotRef = useRef<HTMLSlotElement>();
+	const nextSlotRef = useRef<HTMLSlotElement>();
 
 	const adapter = useMemo<PersistAdapter | undefined>(() => {
 		if (typeof persist === 'string') return localStorageAdapter();
@@ -54,14 +58,12 @@ const ResizableView = ({
 
 	const persistRatio = usePersist(adapter, persistKey, (value) => {
 		ratioRef.current = value;
-		const root = host.shadowRoot;
-		if (!root) return;
-		const previous = root
-			.querySelector<HTMLSlotElement>('slot[name="previous"]')
-			?.assignedElements()[0] as HTMLElement | undefined;
-		const next = root
-			.querySelector<HTMLSlotElement>('slot[name="next"]')
-			?.assignedElements()[0] as HTMLElement | undefined;
+		const previous = prevSlotRef.current?.assignedElements()[0] as
+			| HTMLElement
+			| undefined;
+		const next = nextSlotRef.current?.assignedElements()[0] as
+			| HTMLElement
+			| undefined;
 		if (!previous || !next) return;
 		const containerSize = containerSizeOf(host, direction);
 		const { ratios } = applySizes(
@@ -77,10 +79,8 @@ const ResizableView = ({
 		const root = host.shadowRoot;
 		if (!root) return;
 
-		const prevSlot = root.querySelector<HTMLSlotElement>(
-			'slot[name="previous"]',
-		);
-		const nextSlot = root.querySelector<HTMLSlotElement>('slot[name="next"]');
+		const prevSlot = prevSlotRef.current;
+		const nextSlot = nextSlotRef.current;
 		const defaultSlot = root.querySelector<HTMLSlotElement>('slot:not([name])');
 		if (!prevSlot || !nextSlot || !defaultSlot) return;
 
@@ -100,7 +100,7 @@ const ResizableView = ({
 			next.setAttribute('slot', 'next');
 		}
 
-		const handle = root.querySelector('cosmoz-resize-handle');
+		const handle = handleRef.current;
 		if (!prev || !next || !handle) return;
 
 		const containerSize = containerSizeOf(host, direction);
@@ -117,21 +117,17 @@ const ResizableView = ({
 
 	useEffect(() => {
 		host.setAttribute('data-direction', direction);
-		const root = host.shadowRoot;
-		const handle = root?.querySelector('cosmoz-resize-handle');
-		if (handle) handle.setAttribute('data-direction', direction);
+		handleRef.current?.setAttribute('data-direction', direction);
 	}, [direction]);
 
 	useEffect(() => {
-		const root = host.shadowRoot;
-		if (!root) return;
-		const previous = root
-			.querySelector<HTMLSlotElement>('slot[name="previous"]')
-			?.assignedElements()[0] as HTMLElement | undefined;
-		const next = root
-			.querySelector<HTMLSlotElement>('slot[name="next"]')
-			?.assignedElements()[0] as HTMLElement | undefined;
-		const handle = root.querySelector('cosmoz-resize-handle');
+		const handle = handleRef.current;
+		const previous = prevSlotRef.current?.assignedElements()[0] as
+			| HTMLElement
+			| undefined;
+		const next = nextSlotRef.current?.assignedElements()[0] as
+			| HTMLElement
+			| undefined;
 		if (!previous || !next || !handle) return;
 
 		const bounds = resolveBounds(
@@ -162,9 +158,16 @@ const ResizableView = ({
 	}, [minSize, maxSize, persistRatio, direction]);
 
 	return html`<slot hidden @slotchange=${onSlotChange}></slot
-		><slot name="previous" @slotchange=${onSlotChange}></slot
-		><cosmoz-resize-handle direction=${direction}></cosmoz-resize-handle
-		><slot name="next" @slotchange=${onSlotChange}></slot>`;
+		><slot
+			name="previous"
+			${ref(prevSlotRef)}
+			@slotchange=${onSlotChange}
+		></slot
+		><cosmoz-resize-handle
+			direction=${direction}
+			${ref(handleRef)}
+		></cosmoz-resize-handle
+		><slot name="next" ${ref(nextSlotRef)} @slotchange=${onSlotChange}></slot>`;
 };
 
 customElements.define(
