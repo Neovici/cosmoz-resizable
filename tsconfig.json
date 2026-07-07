@@ -7,9 +7,8 @@
     "strict": true,
     "target": "esnext",
     "allowJs": true,
-    "types": [
-      "node",
-      "mocha"
-    ]
-  }
+    "baseUrl": ".",
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*", "test/**/*", "stories/**/*"]
 }

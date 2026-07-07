@@ -1,5 +1,7 @@
-node_modules
-coverage
-dist
-/storybook-static/
+node_modules/
+dist/
+coverage/
 .eslintcache
+*.log
+.DS_Store
+/storybook-static/
