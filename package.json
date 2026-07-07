@@ -39,7 +39,7 @@
     "test:storybook": "vitest --project=storybook --run",
     "check:duplicates": "check-duplicate-components",
     "changeset": "changeset",
-    "storybook:start": "storybook dev -p 8000",
+    "storybook:start": "storybook dev -p 8000 -h 0.0.0.0",
     "storybook:build": "storybook build",
     "storybook:deploy": "storybook-to-ghpages",
     "storybook:preview": "npm run storybook:build && http-server ./storybook-static/ --silent",
