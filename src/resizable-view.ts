@@ -1,4 +1,12 @@
-import { component, useEffect, useHost, useMemo, useRef } from '@pionjs/pion';
+import {
+	component,
+	useCallback,
+	useEffect,
+	useHost,
+	useMemo,
+	useRef,
+	useState,
+} from '@pionjs/pion';
 import { html } from 'lit-html';
 import { ref } from 'lit-html/directives/ref.js';
 import { localStorageAdapter, usePersist } from './hooks/use-persist';
@@ -43,6 +51,7 @@ const ResizableView = ({
 	const handleRef = useRef<HTMLElement>();
 	const prevSlotRef = useRef<HTMLSlotElement>();
 	const nextSlotRef = useRef<HTMLSlotElement>();
+	const [panelsReady, setPanelsReady] = useState(false);
 
 	const adapter = useMemo<PersistAdapter | undefined>(() => {
 		if (typeof persist === 'string') return localStorageAdapter();
@@ -75,7 +84,7 @@ const ResizableView = ({
 		dispatchSplitResize(host, ratios);
 	});
 
-	const onSlotChange = () => {
+	const onSlotChange = useCallback(() => {
 		const root = host.shadowRoot;
 		if (!root) return;
 
@@ -101,19 +110,8 @@ const ResizableView = ({
 		}
 
 		const handle = handleRef.current;
-		if (!prev || !next || !handle) return;
-
-		const containerSize = containerSizeOf(host, direction);
-		const bounds = resolveBounds(minSize, maxSize, containerSize);
-		const restored = adapter?.get?.(persistKey ?? '');
-		const splitPx =
-			restored !== undefined
-				? clampSplitPx(restored * containerSize, bounds)
-				: computeInitial(initialSizes, bounds, containerSize);
-		const { ratios } = applySizes(prev, next, splitPx, containerSize);
-		ratioRef.current = ratios[0];
-		dispatchSplitResize(host, ratios);
-	};
+		if (prev && next && handle) setPanelsReady(true);
+	}, []);
 
 	useEffect(() => {
 		host.setAttribute('data-direction', direction);
@@ -121,6 +119,7 @@ const ResizableView = ({
 	}, [direction]);
 
 	useEffect(() => {
+		if (!panelsReady) return;
 		const handle = handleRef.current;
 		const previous = prevSlotRef.current?.assignedElements()[0] as
 			| HTMLElement
@@ -130,11 +129,18 @@ const ResizableView = ({
 			| undefined;
 		if (!previous || !next || !handle) return;
 
-		const bounds = resolveBounds(
-			minSize,
-			maxSize,
-			containerSizeOf(host, direction),
-		);
+		const containerSize = containerSizeOf(host, direction);
+		const bounds = resolveBounds(minSize, maxSize, containerSize);
+
+		const restored = adapter?.get?.(persistKey ?? '');
+		const splitPx =
+			restored !== undefined
+				? clampSplitPx(restored * containerSize, bounds)
+				: computeInitial(initialSizes, bounds, containerSize);
+		const { ratios } = applySizes(previous, next, splitPx, containerSize);
+		ratioRef.current = ratios[0];
+		dispatchSplitResize(host, ratios);
+
 		const handler = createFlexResize({
 			elements: { previous, next, container: host },
 			direction,
@@ -155,7 +161,7 @@ const ResizableView = ({
 		return () => {
 			handle.removeEventListener('resize', handler as EventListener);
 		};
-	}, [minSize, maxSize, persistRatio, direction]);
+	}, [minSize, maxSize, persistRatio, direction, panelsReady]);
 
 	return html`<slot hidden @slotchange=${onSlotChange}></slot
 		><slot
