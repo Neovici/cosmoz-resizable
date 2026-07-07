@@ -2,32 +2,67 @@ import { css } from '@pionjs/pion';
 
 export const styles = css`
 	:host {
-		display: block;
-		background: var(--cosmoz-resize-handle-background, #e0e0e0);
-		user-select: none;
+		display: flex;
 		position: relative;
 		z-index: 1;
+		user-select: none;
 		touch-action: none;
+		background: var(--cz-queue-gutter-bg, transparent);
+	}
+
+	:host::before {
+		content: '';
+		display: block;
+		flex: none;
+		background: var(--cz-queue-gutter-divider-bg, #bbb);
+		border-radius: 2px;
+		pointer-events: none;
+	}
+
+	:host::after {
+		content: '';
+		position: absolute;
+		inset: -3px;
 	}
 
 	:host([data-direction='horizontal']) {
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
 		min-height: 100%;
 		width: var(--cosmoz-resize-handle-size, 4px);
 		cursor: col-resize;
 	}
 
+	:host([data-direction='horizontal'])::before {
+		width: var(--cosmoz-resize-handle-size, 4px);
+		height: 40px;
+	}
+
 	:host([data-direction='vertical']) {
+		flex-direction: row;
+		justify-content: center;
+		align-items: center;
 		height: var(--cosmoz-resize-handle-size, 4px);
 		width: 100%;
 		cursor: row-resize;
 	}
 
-	:host(:hover) {
-		background: var(--cosmoz-resize-handle-hover-background, #ccc);
+	:host([data-direction='vertical'])::before {
+		height: var(--cosmoz-resize-handle-size, 4px);
+		width: 40px;
 	}
 
-	:host([data-dragging]) {
-		background: var(--cosmoz-resize-handle-dragging-background, #007acc);
-		cursor: grabbing;
+	:host(:hover)::before,
+	:host([data-dragging])::before {
+		background: var(
+			--cz-queue-gutter-divider-hover-color,
+			var(--cz-accent-color, #007acc)
+		);
+		box-shadow: 0 0 0 1px
+			var(
+				--cz-queue-gutter-divider-hover-color,
+				var(--cz-accent-color, #007acc)
+			);
 	}
 `;
