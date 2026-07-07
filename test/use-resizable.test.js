@@ -2,7 +2,7 @@ import { expect, waitUntil } from '@open-wc/testing';
 import { component, html as pionHtml } from '@pionjs/pion';
 import { useResizable } from '../src/hooks/use-resizable';
 
-import '../src/cosmoz-resize-handle';
+import '../src/resize-handle';
 
 let counter = 0;
 const makeHost = (opts) => {

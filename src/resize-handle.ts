@@ -1,7 +1,7 @@
 import { component } from '@pionjs/pion';
 import { nothing } from 'lit-html';
-import { styles } from './cosmoz-resize-handle.css';
 import useResizeHandle from './hooks/use-resize-handle';
+import { styles } from './resize-handle.css';
 import { ResizerDirection } from './types';
 
 interface ResizeHandleProps {

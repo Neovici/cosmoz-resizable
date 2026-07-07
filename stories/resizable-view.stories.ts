@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/web-components';
 import { html } from 'lit-html';
 import { expect, waitFor } from 'storybook/test';
-import '../src/cosmoz-resize-handle';
 import '../src/resizable-view';
+import '../src/resize-handle';
 
 const meta: Meta = {
 	title: 'Components/ResizableView',

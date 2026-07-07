@@ -1,8 +1,8 @@
 import { component, useEffect, useHost, useMemo, useRef } from '@pionjs/pion';
 import { html } from 'lit-html';
-import './cosmoz-resize-handle';
 import { localStorageAdapter, usePersist } from './hooks/use-persist';
 import { styles } from './resizable-view.css';
+import './resize-handle';
 import { createFlexResize } from './resizers';
 import { PersistAdapter, ResizerDirection, SizeSpec } from './types';
 import {

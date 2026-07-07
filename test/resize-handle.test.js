@@ -1,5 +1,5 @@
 import { expect, fixture, html, waitUntil } from '@open-wc/testing';
-import '../src/cosmoz-resize-handle';
+import '../src/resize-handle';
 
 describe('cosmoz-resize-handle', () => {
 	it('is defined', async () => {

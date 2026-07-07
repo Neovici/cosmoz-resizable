@@ -1,7 +1,7 @@
-export { ResizeHandle } from './cosmoz-resize-handle';
 export { localStorageAdapter, usePersist } from './hooks/use-persist';
 export { useResizable } from './hooks/use-resizable';
 export { ResizableView } from './resizable-view';
+export { ResizeHandle } from './resize-handle';
 export { createFlexResize } from './resizers';
 export type {
 	AbsoluteSize,
