@@ -31,7 +31,7 @@ describe('cosmoz-resize-handle', () => {
 		);
 		await waitUntil(() => el.hasAttribute('data-direction'));
 		let detail = null;
-		el.addEventListener('resize', (e) => {
+		el.addEventListener('resize-handle', (e) => {
 			detail = e.detail;
 		});
 		el.dispatchEvent(
@@ -59,7 +59,7 @@ describe('cosmoz-resize-handle', () => {
 		);
 		await waitUntil(() => el.hasAttribute('data-direction'));
 		const phases = [];
-		el.addEventListener('resize', (e) => phases.push(e.detail.phase));
+		el.addEventListener('resize-handle', (e) => phases.push(e.detail.phase));
 		el.dispatchEvent(
 			new MouseEvent('mousedown', { clientX: 100, clientY: 50 }),
 		);
@@ -75,7 +75,7 @@ describe('cosmoz-resize-handle', () => {
 		);
 		await waitUntil(() => el.hasAttribute('data-direction'));
 		const phases = [];
-		el.addEventListener('resize', (e) => phases.push(e.detail.phase));
+		el.addEventListener('resize-handle', (e) => phases.push(e.detail.phase));
 		el.dispatchEvent(
 			new MouseEvent('mousedown', { clientX: 100, clientY: 50 }),
 		);
@@ -90,7 +90,7 @@ describe('cosmoz-resize-handle', () => {
 		);
 		await waitUntil(() => el.hasAttribute('data-direction'));
 		let count = 0;
-		el.addEventListener('resize', () => {
+		el.addEventListener('resize-handle', () => {
 			count++;
 		});
 		el.dispatchEvent(
@@ -111,7 +111,7 @@ describe('cosmoz-resize-handle', () => {
 		);
 		await waitUntil(() => el.hasAttribute('data-direction'));
 		let detail = null;
-		el.addEventListener('resize', (e) => {
+		el.addEventListener('resize-handle', (e) => {
 			detail = e.detail;
 		});
 		const touchEvent = new TouchEvent('touchstart', {
@@ -133,7 +133,7 @@ describe('cosmoz-resize-handle', () => {
 		);
 		await waitUntil(() => el.hasAttribute('data-direction'));
 		const phases = [];
-		el.addEventListener('resize', (e) => phases.push(e.detail.phase));
+		el.addEventListener('resize-handle', (e) => phases.push(e.detail.phase));
 		el.dispatchEvent(
 			new TouchEvent('touchstart', {
 				touches: [

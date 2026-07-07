@@ -29,9 +29,9 @@ interface ResizableViewProps {
 	persist?: string | PersistAdapter;
 }
 
-const dispatchSplitResize = (host: HTMLElement, ratios: [number, number]) =>
+const dispatchResizePanels = (host: HTMLElement, ratios: [number, number]) =>
 	host.dispatchEvent(
-		new CustomEvent('split-resize', { detail: { ratios }, bubbles: true }),
+		new CustomEvent('resize-panels', { detail: { ratios }, bubbles: true }),
 	);
 
 const containerSizeOf = (host: HTMLElement, direction: ResizerDirection) => {
@@ -81,7 +81,7 @@ const ResizableView = ({
 			value * containerSize,
 			containerSize,
 		);
-		dispatchSplitResize(host, ratios);
+		dispatchResizePanels(host, ratios);
 	});
 
 	const onSlotChange = useCallback(() => {
@@ -139,7 +139,7 @@ const ResizableView = ({
 				: computeInitial(initialSizes, bounds, containerSize);
 		const { ratios } = applySizes(previous, next, splitPx, containerSize);
 		ratioRef.current = ratios[0];
-		dispatchSplitResize(host, ratios);
+		dispatchResizePanels(host, ratios);
 
 		const handler = createFlexResize({
 			elements: { previous, next, container: host },
@@ -150,16 +150,16 @@ const ResizableView = ({
 				const cs = containerSizeOf(host, direction);
 				applySizes(previous, next, px, cs);
 				ratioRef.current = ratios[0];
-				dispatchSplitResize(host, ratios);
+				dispatchResizePanels(host, ratios);
 			},
 			onResizeEnd: ({ ratios }) => {
 				persistRatio?.(ratios[0]);
 			},
 		});
-		handle.addEventListener('resize', handler as EventListener);
+		handle.addEventListener('resize-handle', handler as EventListener);
 
 		return () => {
-			handle.removeEventListener('resize', handler as EventListener);
+			handle.removeEventListener('resize-handle', handler as EventListener);
 		};
 	}, [minSize, maxSize, persistRatio, direction, panelsReady]);
 

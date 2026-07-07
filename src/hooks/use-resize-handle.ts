@@ -13,7 +13,7 @@ const useResizeHandle = (direction: ResizerDirection = 'horizontal') => {
 		const fire = (phase: ResizePhase, e: MouseEvent | TouchEvent) => {
 			const mousePosition = getMousePosition(e);
 			host.dispatchEvent(
-				new CustomEvent('resize', {
+				new CustomEvent('resize-handle', {
 					detail: { phase, mousePosition },
 					bubbles: true,
 				}),

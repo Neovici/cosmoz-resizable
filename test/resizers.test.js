@@ -2,7 +2,7 @@ import { expect } from '@open-wc/testing';
 import { createFlexResize } from '../src/resizers';
 
 const makeEvent = (phase, x, y) =>
-	new CustomEvent('resize', {
+	new CustomEvent('resize-handle', {
 		detail: { phase, mousePosition: { x, y } },
 	});
 

@@ -10,7 +10,7 @@ A pure pointer-event courier. Fires a single `resize` event with `{ phase: 'star
 
 ### `<cosmoz-resizable-view>`
 
-A slot-based preset that auto-inserts a `<cosmoz-resize-handle>` between 2 slotted children. Manages flex-basis sizing, fires `split-resize` events, and supports persistence.
+A slot-based preset that auto-inserts a `<cosmoz-resize-handle>` between 2 slotted children. Manages flex-basis sizing, fires `resize-panels` events, and supports persistence.
 
 ```html
 <cosmoz-resizable-view

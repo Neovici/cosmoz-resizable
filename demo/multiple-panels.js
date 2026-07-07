@@ -1,9 +1,9 @@
-import { component, html, useState } from '@pionjs/pion'
-import '../src/resizable-view'
+import { component, html, useState } from '@pionjs/pion';
+import '../src/resizable-view';
 
 const MultiplePanels = () => {
-	const [outer, setOuter] = useState([0.5, 0.5])
-	const [inner, setInner] = useState([0.5, 0.5])
+	const [outer, setOuter] = useState([0.5, 0.5]);
+	const [inner, setInner] = useState([0.5, 0.5]);
 
 	return html`
 		<style>
@@ -58,7 +58,7 @@ const MultiplePanels = () => {
 		<cosmoz-resizable-view
 			class="container"
 			.initialSizes=${[0.5, 0.5]}
-			@split-resize=${(e) => setOuter(e.detail.ratios)}
+			@resize-panels=${(e) => setOuter(e.detail.ratios)}
 		>
 			<div class="panel left-panel">
 				<h3>Left Panel</h3>
@@ -66,7 +66,7 @@ const MultiplePanels = () => {
 			<cosmoz-resizable-view
 				direction="vertical"
 				.initialSizes=${[0.5, 0.5]}
-				@split-resize=${(e) => setInner(e.detail.ratios)}
+				@resize-panels=${(e) => setInner(e.detail.ratios)}
 			>
 				<div class="panel top-panel">
 					<h3>Top Panel</h3>
@@ -78,13 +78,17 @@ const MultiplePanels = () => {
 		</cosmoz-resizable-view>
 
 		<div class="stats" style="margin: 20px; font-family: monospace;">
-			<p>Outer: ${Math.round(outer[0] * 100)}% / ${Math.round(outer[1] * 100)}%</p>
-			<p>Inner: ${Math.round(inner[0] * 100)}% / ${Math.round(inner[1] * 100)}%</p>
+			<p>
+				Outer: ${Math.round(outer[0] * 100)}% / ${Math.round(outer[1] * 100)}%
+			</p>
+			<p>
+				Inner: ${Math.round(inner[0] * 100)}% / ${Math.round(inner[1] * 100)}%
+			</p>
 		</div>
-	`
-}
+	`;
+};
 
 customElements.define(
 	'multiple-panels',
-	component(MultiplePanels, { useShadowDOM: true })
-)
+	component(MultiplePanels, { useShadowDOM: true }),
+);

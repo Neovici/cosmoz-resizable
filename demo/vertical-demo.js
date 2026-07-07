@@ -1,8 +1,8 @@
-import { component, html, useState } from '@pionjs/pion'
-import '../src/resizable-view'
+import { component, html, useState } from '@pionjs/pion';
+import '../src/resizable-view';
 
 const VerticalDemo = () => {
-	const [ratios, setRatios] = useState([0.5, 0.5])
+	const [ratios, setRatios] = useState([0.5, 0.5]);
 
 	return html`
 		<style>
@@ -58,7 +58,7 @@ const VerticalDemo = () => {
 			class="container"
 			direction="vertical"
 			.initialSizes=${[0.5, 0.5]}
-			@split-resize=${(e) => setRatios(e.detail.ratios)}
+			@resize-panels=${(e) => setRatios(e.detail.ratios)}
 		>
 			<div class="panel top-panel">
 				<h3>Top Panel</h3>
@@ -67,10 +67,10 @@ const VerticalDemo = () => {
 				<h3>Bottom Panel</h3>
 			</div>
 		</cosmoz-resizable-view>
-	`
-}
+	`;
+};
 
 customElements.define(
 	'vertical-demo',
-	component(VerticalDemo, { useShadowDOM: true })
-)
+	component(VerticalDemo, { useShadowDOM: true }),
+);

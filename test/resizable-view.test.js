@@ -77,12 +77,12 @@ describe('cosmoz-resizable-view', () => {
 		expect(next.style.flexBasis).to.equal('70%');
 	});
 
-	it('dispatches split-resize event on init', async () => {
+	it('dispatches resize-panels event on init', async () => {
 		let eventDetail = null;
 		const el = await fixture(
 			html`<cosmoz-resizable-view
 				.initialSizes=${[0.4, 0.6]}
-				@split-resize=${(e) => {
+				@resize-panels=${(e) => {
 					eventDetail = e.detail;
 				}}
 			>

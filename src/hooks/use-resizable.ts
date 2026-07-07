@@ -82,8 +82,9 @@ const initialSplitPx = (
 	containerSize: number,
 ): number => {
 	const restored = adapter?.get?.(persistKey ?? '');
-	if (restored !== undefined)
-		{return clampSplitPx(restored * containerSize, bounds);}
+	if (restored !== undefined) {
+		return clampSplitPx(restored * containerSize, bounds);
+	}
 	return computeInitial(initialSizes, bounds, containerSize);
 };
 
@@ -96,7 +97,7 @@ const attachHandle = (
 	const handle = document.createElement('cosmoz-resize-handle') as HTMLElement;
 	handle.setAttribute('data-direction', direction);
 	container.insertBefore(handle, next);
-	handle.addEventListener('resize', handler);
+	handle.addEventListener('resize-handle', handler);
 	return handle;
 };
 
@@ -170,7 +171,7 @@ const useResizable = ({
 		);
 
 		return () => {
-			handle.removeEventListener('resize', handler as EventListener);
+			handle.removeEventListener('resize-handle', handler as EventListener);
 			container.removeChild(handle);
 			previous.style.flexBasis = '';
 			next.style.flexBasis = '';
