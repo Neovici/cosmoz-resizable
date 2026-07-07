@@ -15,7 +15,6 @@ export const styles = css`
 		display: block;
 		flex: none;
 		background: var(--cz-queue-gutter-divider-bg, #bbb);
-		border-radius: 2px;
 		pointer-events: none;
 	}
 
@@ -27,30 +26,28 @@ export const styles = css`
 
 	:host([data-direction='horizontal']) {
 		flex-direction: column;
-		justify-content: center;
 		align-items: center;
 		min-height: 100%;
-		width: var(--cosmoz-resize-handle-size, 4px);
+		width: var(--cosmoz-resize-handle-size, 2px);
 		cursor: col-resize;
 	}
 
 	:host([data-direction='horizontal'])::before {
-		width: var(--cosmoz-resize-handle-size, 4px);
-		height: 40px;
+		width: 1px;
+		flex: 1;
 	}
 
 	:host([data-direction='vertical']) {
 		flex-direction: row;
-		justify-content: center;
 		align-items: center;
-		height: var(--cosmoz-resize-handle-size, 4px);
+		height: var(--cosmoz-resize-handle-size, 2px);
 		width: 100%;
 		cursor: row-resize;
 	}
 
 	:host([data-direction='vertical'])::before {
-		height: var(--cosmoz-resize-handle-size, 4px);
-		width: 40px;
+		height: 1px;
+		flex: 1;
 	}
 
 	:host(:hover)::before,
