@@ -3,30 +3,12 @@ import {
 	applySizes,
 	clampSplitPx,
 	computeInitial,
-	isPerPanel,
 	parseSize,
 	resolveBounds,
 	resolveSize,
-	toPixel,
-	toRatio,
 } from '../src/utils';
 
 describe('utils', () => {
-	describe('toRatio / toPixel', () => {
-		it('converts px to ratio', () => {
-			expect(toRatio(200, 400)).to.equal(0.5);
-			expect(toRatio(0, 400)).to.equal(0);
-		});
-
-		it('returns 0 for zero container', () => {
-			expect(toRatio(100, 0)).to.equal(0);
-		});
-
-		it('converts ratio to px', () => {
-			expect(toPixel(0.5, 400)).to.equal(200);
-		});
-	});
-
 	describe('parseSize', () => {
 		it('parses bare number as absolute by default', () => {
 			expect(parseSize(300)).to.deep.equal({ absolute: 300 });
@@ -88,31 +70,6 @@ describe('utils', () => {
 
 		it('returns undefined for undefined', () => {
 			expect(resolveSize(undefined, 1000, false)).to.be.undefined;
-		});
-	});
-
-	describe('isPerPanel', () => {
-		it('single SizeSpec is not per-panel', () => {
-			expect(isPerPanel(300)).to.be.false;
-			expect(isPerPanel('30%')).to.be.false;
-		});
-
-		it('compound tuple [ratio, abs] is not per-panel', () => {
-			expect(isPerPanel([0.3, '300px'])).to.be.false;
-			expect(isPerPanel(['30%', 300])).to.be.false;
-			expect(isPerPanel(['30%', '300px'])).to.be.false;
-		});
-
-		it('two ratios is per-panel', () => {
-			expect(isPerPanel([0.3, 0.7], true)).to.be.true;
-		});
-
-		it('nested tuple is per-panel', () => {
-			expect(isPerPanel([[0.3, '300px'], 0.7])).to.be.true;
-		});
-
-		it('two px values is per-panel', () => {
-			expect(isPerPanel([200, 700])).to.be.true;
 		});
 	});
 

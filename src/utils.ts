@@ -15,12 +15,6 @@ export const getMousePosition = (e: MouseEvent | TouchEvent): MousePosition => {
 	return { x: 0, y: 0 };
 };
 
-export const toRatio = (pixel: number, containerSize: number): number =>
-	containerSize > 0 ? pixel / containerSize : 0;
-
-export const toPixel = (ratio: number, containerSize: number): number =>
-	ratio * containerSize;
-
 const RATIO_RE = /^(\d+(?:\.\d+)?)%$/u;
 const PX_RE = /^(\d+(?:\.\d+)?)px$/u;
 const VW_RE = /^(\d+(?:\.\d+)?)vw$/u;
@@ -95,7 +89,7 @@ const isRatioLike = (v: unknown): boolean =>
 	(typeof v === 'number' && v >= 0 && v <= 1) ||
 	(typeof v === 'string' && RATIO_RE.test(v));
 
-export const isPerPanel = (
+const isPerPanel = (
 	spec: SizeSpec | [SizeSpec, SizeSpec],
 	bareAsRatio = false,
 ): boolean => {
@@ -124,17 +118,6 @@ const resolvePanelBounds = (
 		resolveSize(spec as SizeSpec, containerSize, isFloor, bareAsRatio),
 		undefined,
 	];
-};
-
-export const clampSplit = (
-	splitPx: number,
-	minPx: number | undefined,
-	maxPx: number | undefined,
-): number => {
-	let s = splitPx;
-	if (minPx !== undefined) s = Math.max(s, minPx);
-	if (maxPx !== undefined) s = Math.min(s, maxPx);
-	return Math.max(0, s);
 };
 
 export const resolveBounds = (
@@ -208,10 +191,12 @@ export const computeInitial = (
 	let hi = containerSize;
 	if (bounds.prevMin !== undefined) lo = Math.max(lo, bounds.prevMin);
 	if (bounds.prevMax !== undefined) hi = Math.min(hi, bounds.prevMax);
-	if (bounds.nextMax !== undefined)
-		{lo = Math.max(lo, containerSize - bounds.nextMax);}
-	if (bounds.nextMin !== undefined)
-		{hi = Math.min(hi, containerSize - bounds.nextMin);}
+	if (bounds.nextMax !== undefined) {
+		lo = Math.max(lo, containerSize - bounds.nextMax);
+	}
+	if (bounds.nextMin !== undefined) {
+		hi = Math.min(hi, containerSize - bounds.nextMin);
+	}
 	if (hi < lo) return bounds.prevMax ?? hi;
 	return Math.max(lo, Math.min(preferred, hi));
 };
@@ -225,5 +210,3 @@ export const clampSplitPx = (
 	if (bounds.prevMax !== undefined) s = Math.min(s, bounds.prevMax);
 	return Math.max(0, s);
 };
-
-export { resolvePanelBounds };

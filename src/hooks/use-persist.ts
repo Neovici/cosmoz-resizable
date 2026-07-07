@@ -1,4 +1,4 @@
-import { useEffect } from '@pionjs/pion';
+import { useEffect, useRef } from '@pionjs/pion';
 import { PersistAdapter } from '../types';
 
 const clamp = (v: number): number | undefined =>
@@ -6,7 +6,7 @@ const clamp = (v: number): number | undefined =>
 
 export const localStorageAdapter = (
 	prefix = 'cosmoz-resizable-view:',
-): PersistAdapter => {
+): PersistAdapter & { destroy: () => void } => {
 	const subscribers = new Map<string, Set<(value: number) => void>>();
 	let writeTimer: ReturnType<typeof setTimeout> | undefined;
 	const pending = new Map<string, number>();
@@ -31,8 +31,9 @@ export const localStorageAdapter = (
 	};
 
 	const onStorage = (e: StorageEvent) => {
-		if (e.key === null || !e.key.startsWith(prefix) || e.newValue === null)
-			{return;}
+		if (e.key === null || !e.key.startsWith(prefix) || e.newValue === null) {
+			return;
+		}
 		const key = e.key.slice(prefix.length);
 		const value = clamp(Number(e.newValue));
 		if (value === undefined) return;
@@ -73,6 +74,15 @@ export const localStorageAdapter = (
 				if (s.size === 0) subscribers.delete(key);
 			};
 		},
+		destroy() {
+			if (typeof window !== 'undefined') {
+				window.removeEventListener('storage', onStorage);
+			}
+			if (writeTimer !== undefined) {
+				clearTimeout(writeTimer);
+				flush();
+			}
+		},
 	};
 };
 
@@ -81,13 +91,21 @@ export const usePersist = (
 	key: string | undefined,
 	onRestore: (value: number) => void,
 ): ((value: number) => void) | undefined => {
+	const onRestoreRef = useRef(onRestore);
+	onRestoreRef.current = onRestore;
+
 	useEffect(() => {
 		if (!adapter || !key) return;
 		const restored = adapter.get(key);
-		if (restored !== undefined) onRestore(restored);
-		const unsubscribe = adapter.subscribe?.(key, onRestore);
-		return unsubscribe;
-	}, [adapter, key, onRestore]);
+		if (restored !== undefined) onRestoreRef.current?.(restored as number);
+		const unsubscribe = adapter.subscribe?.(key, (v: number) =>
+			onRestoreRef.current?.(v),
+		);
+		return () => {
+			unsubscribe?.();
+			(adapter as PersistAdapter & { destroy?: () => void }).destroy?.();
+		};
+	}, [adapter, key]);
 
 	if (!adapter || !key) return undefined;
 	return (value: number) => adapter.set(key, value);
