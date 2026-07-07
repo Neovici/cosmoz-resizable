@@ -1,10 +1,10 @@
 {
-  "name": "@neovici/resizable",
+  "name": "@neovici/cosmoz-resizable",
   "version": "1.1.0",
   "description": "A simple, lightweight web component for resizing two adjacent elements with a draggable divider line",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Neovici/resizable.git"
+    "url": "git+https://github.com/Neovici/cosmoz-resizable.git"
   },
   "keywords": [
     "web-components",
