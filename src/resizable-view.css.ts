@@ -13,18 +13,34 @@ export const styles = css`
 		flex-direction: column;
 	}
 
-	::slotted(*) {
-		flex: 1 1 0;
+	::slotted([slot='previous']) {
+		flex-grow: 0;
+		flex-shrink: 1;
 		min-width: 0;
 		min-height: 0;
 		overflow: auto;
 	}
 
-	:host([data-direction='vertical']) ::slotted(*) {
-		min-width: auto;
+	::slotted([slot='next']) {
+		flex-grow: 1;
+		flex-shrink: 1;
+		flex-basis: 0;
+		min-width: 0;
+		min-height: 0;
+		overflow: auto;
 	}
 
 	cosmoz-resize-handle {
 		flex: 0 0 auto;
+	}
+
+	:host([data-single-panel]) cosmoz-resize-handle {
+		display: none;
+	}
+
+	:host([data-single-panel]) ::slotted(*) {
+		flex-grow: 1 !important;
+		flex-shrink: 1 !important;
+		flex-basis: 0;
 	}
 `;
