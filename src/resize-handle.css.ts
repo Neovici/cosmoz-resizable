@@ -7,21 +7,24 @@ export const styles = css`
 		z-index: 1;
 		user-select: none;
 		touch-action: none;
-		background: var(--cz-queue-gutter-bg, transparent);
+		background: var(--cz-queue-gutter-bg, var(--cz-header-bg-color, #fff));
 	}
 
 	:host::before {
 		content: '';
 		display: block;
 		flex: none;
-		background: var(--cz-queue-gutter-divider-bg, #bbb);
+		background: var(--cz-queue-gutter-bg, var(--cz-header-bg-color, #bbb));
 		pointer-events: none;
 	}
 
 	:host::after {
 		content: '';
 		position: absolute;
-		inset: -3px;
+		top: 0;
+		left: -2px;
+		right: -2px;
+		bottom: 0;
 	}
 
 	:host([data-direction='horizontal']) {
@@ -52,14 +55,12 @@ export const styles = css`
 
 	:host(:hover)::before,
 	:host([data-dragging])::before {
-		background: var(
-			--cz-queue-gutter-divider-hover-color,
-			var(--cz-accent-color, #007acc)
-		);
-		box-shadow: 0 0 0 1px
-			var(
-				--cz-queue-gutter-divider-hover-color,
-				var(--cz-accent-color, #007acc)
-			);
+		background: var(--cz-accent-color);
+		box-shadow: -1px 0 0 1px var(--cz-accent-color);
+	}
+
+	:host([data-direction='vertical']:hover)::before,
+	:host([data-direction='vertical'][data-dragging])::before {
+		box-shadow: 0 -1px 0 1px var(--cz-accent-color);
 	}
 `;

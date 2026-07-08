@@ -1,6 +1,6 @@
 import { useEffect, useHost } from '@pionjs/pion';
-import { ResizePhase, ResizerDirection } from '../types';
-import { getMousePosition } from '../utils';
+import { getMousePosition } from '../resizers';
+import { MousePosition, ResizePhase, ResizerDirection } from '../types';
 
 const useResizeHandle = (direction: ResizerDirection = 'horizontal') => {
 	const host = useHost();
@@ -10,8 +10,7 @@ const useResizeHandle = (direction: ResizerDirection = 'horizontal') => {
 	}, [direction]);
 
 	useEffect(() => {
-		const fire = (phase: ResizePhase, e: MouseEvent | TouchEvent) => {
-			const mousePosition = getMousePosition(e);
+		const fire = (phase: ResizePhase, mousePosition: MousePosition) => {
 			host.dispatchEvent(
 				new CustomEvent('resize-handle', {
 					detail: { phase, mousePosition },
@@ -20,11 +19,28 @@ const useResizeHandle = (direction: ResizerDirection = 'horizontal') => {
 			);
 		};
 
-		const onPointerMove = (e: MouseEvent | TouchEvent) => fire('move', e);
+		let raf = 0;
+		let lastMovePos: MousePosition | undefined;
+
+		const flushMove = () => {
+			raf = 0;
+			if (!lastMovePos) return;
+			fire('move', lastMovePos);
+			lastMovePos = undefined;
+		};
+
+		const onPointerMove = (e: MouseEvent | TouchEvent) => {
+			lastMovePos = getMousePosition(e);
+			if (!raf) raf = requestAnimationFrame(flushMove);
+		};
 
 		const onPointerUp = (e: MouseEvent | TouchEvent) => {
+			if (raf) {
+				cancelAnimationFrame(raf);
+				flushMove();
+			}
 			host.removeAttribute('data-dragging');
-			fire('end', e);
+			fire('end', getMousePosition(e));
 			document.removeEventListener('mousemove', onPointerMove);
 			document.removeEventListener('mouseup', onPointerUp);
 			document.removeEventListener('touchmove', onPointerMove);
@@ -33,7 +49,7 @@ const useResizeHandle = (direction: ResizerDirection = 'horizontal') => {
 
 		const startDrag = (e: MouseEvent | TouchEvent) => {
 			host.setAttribute('data-dragging', 'true');
-			fire('start', e);
+			fire('start', getMousePosition(e));
 			document.addEventListener('mousemove', onPointerMove);
 			document.addEventListener('mouseup', onPointerUp);
 			document.addEventListener('touchmove', onPointerMove, { passive: false });
@@ -54,6 +70,7 @@ const useResizeHandle = (direction: ResizerDirection = 'horizontal') => {
 		host.addEventListener('touchstart', onTouchStart, { passive: false });
 
 		return () => {
+			if (raf) cancelAnimationFrame(raf);
 			host.removeEventListener('mousedown', onMouseDown);
 			host.removeEventListener('touchstart', onTouchStart);
 			document.removeEventListener('mousemove', onPointerMove);

@@ -2,6 +2,7 @@ import { expect } from '@open-wc/testing';
 import { localStorageAdapter } from '../src/hooks/use-persist';
 
 const key = 'test-split';
+const prefix = 'cosmoz-resizable-view:';
 
 describe('use-persist', () => {
 	let adapter;
@@ -19,34 +20,42 @@ describe('use-persist', () => {
 		expect(adapter.get(key)).to.be.undefined;
 	});
 
-	it('set then get returns the value', async () => {
-		adapter.set(key, 0.45);
+	it('set then get returns {px}', async () => {
+		adapter.set(key, { px: 300 });
 		await new Promise((r) => setTimeout(r, 150));
-		expect(adapter.get(key)).to.equal(0.45);
+		expect(adapter.get(key)).to.deep.equal({ px: 300 });
 	});
 
 	it('debounces writes (~100ms)', async () => {
-		adapter.set(key, 0.1);
-		adapter.set(key, 0.2);
-		adapter.set(key, 0.3);
-		expect(localStorage.getItem('cosmoz-resizable-view:' + key)).to.be.null;
+		adapter.set(key, { px: 100 });
+		adapter.set(key, { px: 200 });
+		adapter.set(key, { px: 300 });
+		expect(localStorage.getItem(prefix + key)).to.be.null;
 		await new Promise((r) => setTimeout(r, 150));
-		expect(localStorage.getItem('cosmoz-resizable-view:' + key)).to.equal(
-			'0.3',
+		expect(localStorage.getItem(prefix + key)).to.equal(
+			JSON.stringify({ px: 300 }),
 		);
 	});
 
-	it('clamps invalid values on restore', async () => {
-		adapter.set(key, 0.5);
+	it('rejects invalid px on restore', async () => {
+		adapter.set(key, { px: 300 });
 		await new Promise((r) => setTimeout(r, 150));
-		localStorage.setItem('cosmoz-resizable-view:' + key, '1.5');
+		localStorage.setItem(prefix + key, JSON.stringify({ px: -10 }));
 		expect(adapter.get(key)).to.be.undefined;
-		localStorage.setItem('cosmoz-resizable-view:' + key, 'NaN');
+	});
+
+	it('rejects non-object on restore', () => {
+		localStorage.setItem(prefix + key, '0.45');
+		expect(adapter.get(key)).to.be.undefined;
+	});
+
+	it('rejects NaN on restore', () => {
+		localStorage.setItem(prefix + key, JSON.stringify({ px: NaN }));
 		expect(adapter.get(key)).to.be.undefined;
 	});
 
 	it('subscribe receives cross-tab updates via storage event', async () => {
-		adapter.set(key, 0.5);
+		adapter.set(key, { px: 300 });
 		await new Promise((r) => setTimeout(r, 150));
 		let received;
 		const unsub = adapter.subscribe(key, (v) => {
@@ -54,16 +63,16 @@ describe('use-persist', () => {
 		});
 		window.dispatchEvent(
 			new StorageEvent('storage', {
-				key: 'cosmoz-resizable-view:' + key,
-				newValue: '0.6',
+				key: prefix + key,
+				newValue: JSON.stringify({ px: 400 }),
 			}),
 		);
-		expect(received).to.equal(0.6);
+		expect(received).to.deep.equal({ px: 400 });
 		unsub();
 	});
 
 	it('subscribe cleanup stops callbacks', async () => {
-		adapter.set(key, 0.5);
+		adapter.set(key, { px: 300 });
 		await new Promise((r) => setTimeout(r, 150));
 		let received;
 		const unsub = adapter.subscribe(key, (v) => {
@@ -72,8 +81,8 @@ describe('use-persist', () => {
 		unsub();
 		window.dispatchEvent(
 			new StorageEvent('storage', {
-				key: 'cosmoz-resizable-view:' + key,
-				newValue: '0.7',
+				key: prefix + key,
+				newValue: JSON.stringify({ px: 400 }),
 			}),
 		);
 		expect(received).to.be.undefined;

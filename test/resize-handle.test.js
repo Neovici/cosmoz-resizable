@@ -53,7 +53,7 @@ describe('cosmoz-resize-handle', () => {
 		expect(el.getAttribute('data-dragging')).to.equal('true');
 	});
 
-	it('fires resize with phase=move on mousemove', async () => {
+	it('fires resize with phase=move on mousemove (rAF-batched)', async () => {
 		const el = await fixture(
 			html`<cosmoz-resize-handle></cosmoz-resize-handle>`,
 		);
@@ -66,7 +66,12 @@ describe('cosmoz-resize-handle', () => {
 		document.dispatchEvent(
 			new MouseEvent('mousemove', { clientX: 200, clientY: 50 }),
 		);
+		expect(phases).to.deep.equal(['start']);
+		await waitUntil(() => phases.includes('move'), undefined, {
+			timeout: 3000,
+		});
 		expect(phases).to.deep.equal(['start', 'move']);
+		expect(phases[1]).to.equal('move');
 	});
 
 	it('fires resize with phase=end and clears dragging on mouseup', async () => {
@@ -150,6 +155,7 @@ describe('cosmoz-resize-handle', () => {
 			}),
 		);
 		document.dispatchEvent(new TouchEvent('touchend', { touches: [] }));
+		// touchend flushes pending rAF synchronously, so move+end are both present
 		expect(phases).to.deep.equal(['start', 'move', 'end']);
 		expect(el.hasAttribute('data-dragging')).to.be.false;
 	});

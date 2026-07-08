@@ -5,6 +5,16 @@ import {
 	ResizerDirection,
 } from './types';
 
+const getMousePosition = (e: MouseEvent | TouchEvent): MousePosition => {
+	if (e instanceof MouseEvent) {
+		return { x: e.clientX, y: e.clientY };
+	}
+	if (e.touches && e.touches.length > 0) {
+		return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+	}
+	return { x: 0, y: 0 };
+};
+
 const axis = (
 	position: MousePosition,
 	rect: DOMRect,
@@ -12,67 +22,72 @@ const axis = (
 ): number =>
 	direction === 'horizontal' ? position.x - rect.left : position.y - rect.top;
 
-const size = (rect: DOMRect, direction: ResizerDirection): number =>
-	direction === 'horizontal' ? rect.width : rect.height;
-
-const clamp = (value: number, min?: number, max?: number): number => {
-	let v = value;
-	if (min !== undefined) v = Math.max(v, min);
-	if (max !== undefined) v = Math.min(v, max);
-	return Math.max(0, v);
+const parsePx = (value: string): number | undefined => {
+	const n = parseFloat(value);
+	return Number.isNaN(n) ? undefined : n;
 };
 
-const ratios = (clamped: number, containerSize: number): [number, number] => {
-	const safe = containerSize > 0 ? containerSize : 1;
-	const prev = clamped / safe;
-	return [prev, 1 - prev];
-};
-
-const ensureRect = (
-	state: { rect: DOMRect | undefined; size: number },
-	elements: ResizeConfig['elements'],
+const readBounds = (
+	el: HTMLElement,
 	direction: ResizerDirection,
-): DOMRect => {
-	if (!state.rect) {
-		state.rect = elements.container.getBoundingClientRect();
-		state.size = size(state.rect, direction);
+): { min: number; max: number } => {
+	const style = getComputedStyle(el);
+	if (direction === 'horizontal') {
+		return {
+			min: parsePx(style.minWidth) ?? 0,
+			max: parsePx(style.maxWidth) ?? Infinity,
+		};
 	}
-	return state.rect;
+	return {
+		min: parsePx(style.minHeight) ?? 0,
+		max: parsePx(style.maxHeight) ?? Infinity,
+	};
 };
+
+const snapshot = (config: ResizeConfig) => {
+	const rect = config.container.getBoundingClientRect();
+	return { rect, bounds: readBounds(config.previous, config.direction) };
+};
+
+const computePx = (
+	mousePosition: MousePosition,
+	rect: DOMRect,
+	direction: ResizerDirection,
+	bounds: { min: number; max: number },
+): number =>
+	Math.max(
+		bounds.min,
+		Math.min(axis(mousePosition, rect, direction), bounds.max),
+	);
 
 export const createFlexResize = (config: ResizeConfig): ResizeHandler => {
-	const state = { rect: undefined as DOMRect | undefined, size: 0 };
-
-	const onPhase = (
-		phase: 'move' | 'end',
-		mousePosition: MousePosition,
-		c: ResizeConfig,
-	) => {
-		const rect = ensureRect(state, c.elements, c.direction);
-		const clamped = clamp(
-			axis(mousePosition, rect, c.direction),
-			c.minSize,
-			c.maxSize,
-		);
-		const r = ratios(clamped, state.size);
-		if (phase === 'move') {
-			c.onResize?.({ ratios: r, px: clamped });
-		} else {
-			c.onResizeEnd?.({ ratios: r });
-			state.rect = undefined;
-		}
-	};
+	let snap: { rect: DOMRect; bounds: { min: number; max: number } } | undefined;
 
 	return (e) => {
 		const { phase, mousePosition } = e.detail;
+
 		if (phase === 'start') {
-			state.rect = config.elements.container.getBoundingClientRect();
-			state.size = size(state.rect, config.direction);
-			config.onResizeStart?.();
+			snap = snapshot(config);
 			return;
 		}
-		if (phase === 'move' || phase === 'end') {
-			onPhase(phase, mousePosition, config);
+
+		if (phase !== 'move' && phase !== 'end') return;
+		if (!snap) snap = snapshot(config);
+
+		const px = computePx(
+			mousePosition,
+			snap.rect,
+			config.direction,
+			snap.bounds,
+		);
+
+		if (phase === 'move') {
+			config.onResize?.(px);
+		} else {
+			config.onResizeEnd?.(px);
+			snap = undefined;
 		}
 	};
 };
+
+export { getMousePosition };

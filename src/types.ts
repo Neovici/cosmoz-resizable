@@ -12,44 +12,22 @@ export interface ResizeEventDetail {
 	mousePosition: MousePosition;
 }
 
-export type Ratio = number | `${number}%`;
-export type AbsoluteSize =
-	| number
-	| `${number}px`
-	| `${number}vw`
-	| `${number}vh`;
-export type SizeSpec = Ratio | AbsoluteSize | [Ratio, AbsoluteSize];
+export type ResizeHandler = (e: CustomEvent<ResizeEventDetail>) => void;
 
-export interface ResizerElements {
-	previous: HTMLElement;
-	next: HTMLElement;
-	container: HTMLElement;
-}
-
-export interface ResizeCallbackData {
-	ratios: [number, number];
+export interface PersistedState {
 	px: number;
 }
 
-export interface ResizeConfig {
-	elements: ResizerElements;
-	direction: ResizerDirection;
-	minSize?: number;
-	maxSize?: number;
-	onResizeStart?: () => void;
-	onResize?: (data: ResizeCallbackData) => void;
-	onResizeEnd?: (data: { ratios: [number, number] }) => void;
-}
-
-export type ResizeHandler = (e: CustomEvent<ResizeEventDetail>) => void;
-
-export interface ParsedSize {
-	ratio?: number;
-	absolute?: number;
-}
-
 export interface PersistAdapter {
-	get(key: string): number | undefined;
-	set(key: string, value: number): void;
-	subscribe?(key: string, cb: (value: number) => void): () => void;
+	get(key: string): PersistedState | undefined;
+	set(key: string, value: PersistedState): void;
+	subscribe?(key: string, cb: (value: PersistedState) => void): () => void;
+}
+
+export interface ResizeConfig {
+	container: HTMLElement;
+	previous: HTMLElement;
+	direction: ResizerDirection;
+	onResize?: (px: number) => void;
+	onResizeEnd?: (px: number) => void;
 }
