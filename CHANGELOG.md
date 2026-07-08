@@ -1,5 +1,13 @@
 # @neovici/cosmoz-resizable
 
+## 2.0.0
+
+### Major Changes
+
+- 1d807d8: Rewrite to CSS-driven flex model with rAF-batched drag.
+
+  **Breaking:** Explicit `slot="previous"` and `slot="next"` required on slotted elements. Removed `initialSizes`, `minSize`, `useResizable`, `SizeSpec`, ratio support, `PersistAdapter` object form on `persist` prop.
+
 ## 1.1.1
 
 ### Patch Changes
