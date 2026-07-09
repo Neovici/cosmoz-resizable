@@ -98,6 +98,7 @@ const ResizableView = ({
 	const handleRef = useRef<HTMLElement>();
 	const prevSlotRef = useRef<HTMLSlotElement>();
 	const nextSlotRef = useRef<HTMLSlotElement>();
+	const defaultSlotRef = useRef<HTMLSlotElement>();
 	const [panelsReady, setPanelsReady] = useState(false);
 
 	const persistKey = persist ? `${persist}:${direction}` : undefined;
@@ -124,6 +125,12 @@ const ResizableView = ({
 		const prev = prevSlotRef.current?.assignedElements()[0];
 		const next = nextSlotRef.current?.assignedElements()[0];
 		if (prev && next) setPanelsReady(true);
+	}, []);
+
+	const onDefaultSlotChange = useCallback(() => {
+		defaultSlotRef.current
+			?.assignedElements()
+			.forEach((el) => el.setAttribute('slot', 'previous'));
 	}, []);
 
 	useEffect(() => {
@@ -184,6 +191,10 @@ const ResizableView = ({
 	}, [direction, adapter, persist, host, panelsReady]);
 
 	return html`<slot
+			${ref(defaultSlotRef)}
+			@slotchange=${onDefaultSlotChange}
+		></slot
+		><slot
 			name="previous"
 			${ref(prevSlotRef)}
 			@slotchange=${onSlotChange}
