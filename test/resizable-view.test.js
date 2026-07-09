@@ -49,11 +49,11 @@ describe('cosmoz-resizable-view', () => {
 		expect(nextSlot.assignedElements()[0]?.id).to.equal('next');
 	});
 
-	it('does not auto-assign unslotted children', async () => {
+	it('redirects unslotted children to previous slot', async () => {
 		const el = await fixture(
 			html`<cosmoz-resizable-view>
 				<div id="prev">prev</div>
-				<div id="next">next</div>
+				<div id="next" slot="next">next</div>
 			</cosmoz-resizable-view>`,
 		);
 		await waitUntil(
@@ -63,8 +63,11 @@ describe('cosmoz-resizable-view', () => {
 		);
 		const prevSlot = el.shadowRoot.querySelector('slot[name="previous"]');
 		const nextSlot = el.shadowRoot.querySelector('slot[name="next"]');
-		expect(prevSlot.assignedElements().length).to.equal(0);
-		expect(nextSlot.assignedElements().length).to.equal(0);
+		await waitUntil(() => prevSlot.assignedElements().length > 0, undefined, {
+			timeout: 3000,
+		});
+		expect(prevSlot.assignedElements()[0]?.id).to.equal('prev');
+		expect(nextSlot.assignedElements()[0]?.id).to.equal('next');
 	});
 
 	it('sets data-single-panel when one panel is display:none', async () => {
