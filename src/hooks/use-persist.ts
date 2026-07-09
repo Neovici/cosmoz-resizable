@@ -102,7 +102,7 @@ export const localStorageAdapter = (
 export const usePersist = (
 	adapter: PersistAdapter | undefined,
 	key: string | undefined,
-	onRestore: (value: PersistedState) => void,
+	onRestore: (value: PersistedState | undefined) => void,
 ): ((value: PersistedState) => void) | undefined => {
 	const onRestoreRef = useRef(onRestore);
 	onRestoreRef.current = onRestore;
@@ -110,7 +110,7 @@ export const usePersist = (
 	useEffect(() => {
 		if (!adapter || !key) return;
 		const restored = adapter.get(key);
-		if (restored != null) onRestoreRef.current?.(restored);
+		onRestoreRef.current?.(restored);
 		const unsubscribe = adapter.subscribe?.(key, (v) =>
 			onRestoreRef.current?.(v),
 		);
