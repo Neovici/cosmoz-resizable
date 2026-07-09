@@ -1,5 +1,11 @@
 # @neovici/cosmoz-resizable
 
+## 2.2.1
+
+### Patch Changes
+
+- ab7c74f: Fix parseSizeAttr to preserve `calc()` and `var()` values containing spaces when splitting on whitespace. Previously `initial-size="calc(100% - 240px)"` would be mangled into separate tokens.
+
 ## 2.2.0
 
 ### Minor Changes
