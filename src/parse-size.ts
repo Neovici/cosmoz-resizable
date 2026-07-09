@@ -9,7 +9,9 @@ export const parseSizeAttr = (
 	raw: string | null,
 ): { previous?: string; next?: string } => {
 	if (raw == null || raw.trim() === '') return {};
-	const parts = raw.includes(',') ? raw.split(/,\s*/u) : raw.split(/\s+/u);
+	const parts = raw.includes(',')
+		? raw.split(/,\s*/u)
+		: (raw.match(/(?:[^\s()]+\([^)]*\)|\([^)]*\)|[^\s]+)/gu) ?? [raw]);
 	return {
 		previous: addUnit(parts[0]),
 		next: parts.length > 1 ? addUnit(parts[1]) : undefined,

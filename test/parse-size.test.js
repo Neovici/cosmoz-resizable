@@ -55,4 +55,32 @@ describe('parseSizeAttr', () => {
 	it('returns empty for whitespace-only string', () => {
 		expect(parseSizeAttr('   ')).to.deep.equal({});
 	});
+
+	it('preserves calc() with internal spaces (whitespace-separated)', () => {
+		expect(parseSizeAttr('calc(100% - 240px)')).to.deep.equal({
+			previous: 'calc(100% - 240px)',
+			next: undefined,
+		});
+	});
+
+	it('preserves calc() with number as previous (whitespace-separated)', () => {
+		expect(parseSizeAttr('0 calc(100% - 200px)')).to.deep.equal({
+			previous: '0px',
+			next: 'calc(100% - 200px)',
+		});
+	});
+
+	it('preserves two calc() values (whitespace-separated)', () => {
+		expect(parseSizeAttr('calc(50% - 100px) calc(25% + 50px)')).to.deep.equal({
+			previous: 'calc(50% - 100px)',
+			next: 'calc(25% + 50px)',
+		});
+	});
+
+	it('preserves var() values (whitespace-separated)', () => {
+		expect(parseSizeAttr('var(--my-var) 200px')).to.deep.equal({
+			previous: 'var(--my-var)',
+			next: '200px',
+		});
+	});
 });
