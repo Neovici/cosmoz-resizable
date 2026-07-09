@@ -1,5 +1,11 @@
 # @neovici/cosmoz-resizable
 
+## 2.2.0
+
+### Minor Changes
+
+- 0752d58: Add default (unnamed) slot that redirects unslotted children to `previous` slot — safety net for callers that forget `slot="previous"`.
+
 ## 2.1.0
 
 ### Minor Changes
