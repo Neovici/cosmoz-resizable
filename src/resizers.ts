@@ -30,18 +30,13 @@ const parsePx = (value: string): number | undefined => {
 const readBounds = (
 	el: HTMLElement,
 	direction: ResizerDirection,
-): { min: number; max: number } => {
+): { min: number } => {
 	const style = getComputedStyle(el);
-	if (direction === 'horizontal') {
-		return {
-			min: parsePx(style.minWidth) ?? 0,
-			max: parsePx(style.maxWidth) ?? Infinity,
-		};
-	}
-	return {
-		min: parsePx(style.minHeight) ?? 0,
-		max: parsePx(style.maxHeight) ?? Infinity,
-	};
+	const min =
+		direction === 'horizontal'
+			? (parsePx(style.minWidth) ?? 0)
+			: (parsePx(style.minHeight) ?? 0);
+	return { min };
 };
 
 const snapshot = (config: ResizeConfig) => {
@@ -53,39 +48,35 @@ const computePx = (
 	mousePosition: MousePosition,
 	rect: DOMRect,
 	direction: ResizerDirection,
-	bounds: { min: number; max: number },
-): number =>
-	Math.max(
-		bounds.min,
-		Math.min(axis(mousePosition, rect, direction), bounds.max),
-	);
+	bounds: { min: number },
+): number => Math.max(bounds.min, axis(mousePosition, rect, direction));
 
 export const createFlexResize = (config: ResizeConfig): ResizeHandler => {
-	let snap: { rect: DOMRect; bounds: { min: number; max: number } } | undefined;
+	let _snapshot: { rect: DOMRect; bounds: { min: number } } | undefined;
 
 	return (e) => {
 		const { phase, mousePosition } = e.detail;
 
 		if (phase === 'start') {
-			snap = snapshot(config);
+			_snapshot = snapshot(config);
 			return;
 		}
 
 		if (phase !== 'move' && phase !== 'end') return;
-		if (!snap) snap = snapshot(config);
+		if (!_snapshot) _snapshot = snapshot(config);
 
 		const px = computePx(
 			mousePosition,
-			snap.rect,
+			_snapshot.rect,
 			config.direction,
-			snap.bounds,
+			_snapshot.bounds,
 		);
 
 		if (phase === 'move') {
 			config.onResize?.(px);
 		} else {
-			config.onResizeEnd?.(px);
-			snap = undefined;
+			config.onResizeEnd?.();
+			_snapshot = undefined;
 		}
 	};
 };

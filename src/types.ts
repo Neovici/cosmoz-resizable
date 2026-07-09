@@ -29,5 +29,5 @@ export interface ResizeConfig {
 	previous: HTMLElement;
 	direction: ResizerDirection;
 	onResize?: (px: number) => void;
-	onResizeEnd?: (px: number) => void;
+	onResizeEnd?: () => void;
 }

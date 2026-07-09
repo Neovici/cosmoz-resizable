@@ -10,6 +10,7 @@ import {
 import { html } from 'lit-html';
 import { ref } from 'lit-html/directives/ref.js';
 import { localStorageAdapter, usePersist } from './hooks/use-persist';
+import { parseSizeAttr } from './parse-size';
 import { styles } from './resizable-view.css';
 import './resize-handle';
 import { createFlexResize } from './resizers';
@@ -18,12 +19,16 @@ import { PersistedState, ResizerDirection } from './types';
 interface ResizableViewProps {
 	direction?: ResizerDirection;
 	persist?: string;
+	initialSize?: string;
+	initialSizeHorizontal?: string;
+	initialSizeVertical?: string;
+	minSize?: string;
+	minSizeHorizontal?: string;
+	minSizeVertical?: string;
 }
 
-const isVisible = (el: HTMLElement): boolean => {
-	const { width, height } = el.getBoundingClientRect();
-	return width > 0 && height > 0;
-};
+const isVisible = (el: HTMLElement): boolean =>
+	getComputedStyle(el).display !== 'none';
 
 const slotted = (slot: HTMLSlotElement | undefined): HTMLElement | undefined =>
 	slot?.assignedElements()[0] as HTMLElement | undefined;
@@ -45,13 +50,49 @@ const observeVisibility = (
 };
 
 const restore = (previous: HTMLElement, state: PersistedState | undefined) => {
-	if (state == null) return;
+	if (state == null) {
+		previous.style.flexBasis = '';
+		return;
+	}
 	previous.style.flexBasis = `${state.px}px`;
+};
+
+const applySizeVars = (
+	host: HTMLElement,
+	varSuffix: string,
+	base?: string,
+	horizontal?: string,
+	vertical?: string,
+) => {
+	const set = (suffix: string, value?: string) => {
+		const { previous, next } = parseSizeAttr(value ?? null);
+		const prevProp = `--resizable-previous-${varSuffix}${suffix}`;
+		const nextProp = `--resizable-next-${varSuffix}${suffix}`;
+		if (previous != null) {
+			host.style.setProperty(prevProp, previous);
+		} else {
+			host.style.removeProperty(prevProp);
+		}
+		if (next != null) {
+			host.style.setProperty(nextProp, next);
+		} else {
+			host.style.removeProperty(nextProp);
+		}
+	};
+	set('', base);
+	set('-horizontal', horizontal);
+	set('-vertical', vertical);
 };
 
 const ResizableView = ({
 	direction = 'horizontal',
 	persist,
+	initialSize,
+	initialSizeHorizontal,
+	initialSizeVertical,
+	minSize,
+	minSizeHorizontal,
+	minSizeVertical,
 }: ResizableViewProps) => {
 	const host = useHost();
 	const handleRef = useRef<HTMLElement>();
@@ -59,16 +100,22 @@ const ResizableView = ({
 	const nextSlotRef = useRef<HTMLSlotElement>();
 	const [panelsReady, setPanelsReady] = useState(false);
 
+	const persistKey = persist ? `${persist}:${direction}` : undefined;
+
 	const adapter = useMemo(
 		() => (persist ? localStorageAdapter() : undefined),
 		[persist],
 	);
 
-	const persistState = usePersist(adapter, persist, (state: PersistedState) => {
-		const previous = slotted(prevSlotRef.current);
-		if (!previous) return;
-		restore(previous, state);
-	});
+	const persistState = usePersist(
+		adapter,
+		persistKey,
+		(state: PersistedState | undefined) => {
+			const previous = slotted(prevSlotRef.current);
+			if (!previous) return;
+			restore(previous, state);
+		},
+	);
 
 	const persistRef = useRef(persistState);
 	persistRef.current = persistState;
@@ -82,6 +129,25 @@ const ResizableView = ({
 	useEffect(() => {
 		host.setAttribute('data-direction', direction);
 	}, [direction]);
+
+	useEffect(() => {
+		applySizeVars(
+			host,
+			'basis',
+			initialSize,
+			initialSizeHorizontal,
+			initialSizeVertical,
+		);
+		applySizeVars(host, 'min', minSize, minSizeHorizontal, minSizeVertical);
+	}, [
+		host,
+		initialSize,
+		initialSizeHorizontal,
+		initialSizeVertical,
+		minSize,
+		minSizeHorizontal,
+		minSizeVertical,
+	]);
 
 	useEffect(() => {
 		if (!panelsReady) return;
@@ -98,8 +164,13 @@ const ResizableView = ({
 			onResize: (px) => {
 				previous.style.flexBasis = `${px}px`;
 			},
-			onResizeEnd: (px) => {
-				persistRef.current?.({ px });
+			onResizeEnd: () => {
+				requestAnimationFrame(() => {
+					const rect = previous.getBoundingClientRect();
+					const actualPx =
+						direction === 'horizontal' ? rect.width : rect.height;
+					persistRef.current?.({ px: actualPx });
+				});
 			},
 		});
 		handle.addEventListener('resize-handle', handler as EventListener);
@@ -128,7 +199,16 @@ customElements.define(
 	'cosmoz-resizable-view',
 	component(ResizableView, {
 		styleSheets: [styles],
-		observedAttributes: ['direction', 'persist'],
+		observedAttributes: [
+			'direction',
+			'persist',
+			'initial-size',
+			'initial-size-horizontal',
+			'initial-size-vertical',
+			'min-size',
+			'min-size-horizontal',
+			'min-size-vertical',
+		],
 	}),
 );
 
