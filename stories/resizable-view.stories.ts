@@ -269,3 +269,66 @@ export const SlotReassignmentDemo: Story = {
 		);
 	},
 };
+
+export const SinglePanelDemo: Story = {
+	render: () =>
+		html`<cosmoz-resizable-view
+				id="resizable"
+				style="display:flex; width:800px; height:300px; border:1px solid #ccc;"
+			>
+				<div id="only" slot="previous" style="${panelStyle('#ff6b6b')}">
+					<h3>Only panel</h3>
+				</div>
+			</cosmoz-resizable-view>
+			<button id="toggleSecond" style="margin-top:10px;">
+				Add / remove second panel
+			</button>`,
+	async play({ canvasElement, step }) {
+		const el = canvasElement.querySelector('#resizable') as HTMLElement;
+		const onlyPanel = canvasElement.querySelector('#only') as HTMLElement;
+		const width = (panel: HTMLElement) =>
+			Math.round(panel.getBoundingClientRect().width);
+
+		await step(
+			'Single panel fills the container (data-single-panel set)',
+			async () => {
+				await waitFor(() => {
+					expect(el.hasAttribute('data-single-panel')).toBe(true);
+				});
+				// 2px tolerance for the container border
+				expect(width(onlyPanel)).toBeGreaterThanOrEqual(
+					Math.round(el.getBoundingClientRect().width) - 2,
+				);
+			},
+		);
+
+		let secondPanel: HTMLElement;
+		await step('Adding a second panel restores the split', async () => {
+			secondPanel = document.createElement('div');
+			secondPanel.id = 'second';
+			secondPanel.setAttribute('slot', 'next');
+			secondPanel.setAttribute('style', panelStyle('#4ecdc4'));
+			el.appendChild(secondPanel);
+			await waitFor(() => {
+				expect(el.hasAttribute('data-single-panel')).toBe(false);
+			});
+			expect(width(onlyPanel) + width(secondPanel)).toBeLessThanOrEqual(
+				Math.round(el.getBoundingClientRect().width),
+			);
+		});
+
+		await step(
+			'Removing the second panel returns to single-panel state',
+			async () => {
+				secondPanel.remove();
+				await waitFor(() => {
+					expect(el.hasAttribute('data-single-panel')).toBe(true);
+				});
+				// 2px tolerance for the container border
+				expect(width(onlyPanel)).toBeGreaterThanOrEqual(
+					Math.round(el.getBoundingClientRect().width) - 2,
+				);
+			},
+		);
+	},
+};
