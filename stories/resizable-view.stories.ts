@@ -181,3 +181,92 @@ export const CappedInitialSize: Story = {
 		});
 	},
 };
+
+/** Drags the resize handle to x (absolute page X) */
+const dragHandle = (el: HTMLElement, x: number) => {
+	const handle = el.shadowRoot!.querySelector('cosmoz-resize-handle')!;
+	const options = { bubbles: true, detail: { mousePosition: { x, y: 100 } } };
+	handle.dispatchEvent(
+		new CustomEvent('resize-handle', {
+			...options,
+			detail: { ...options.detail, phase: 'start' },
+		}),
+	);
+	handle.dispatchEvent(
+		new CustomEvent('resize-handle', {
+			...options,
+			detail: { ...options.detail, phase: 'move' },
+		}),
+	);
+	handle.dispatchEvent(
+		new CustomEvent('resize-handle', {
+			...options,
+			detail: { ...options.detail, phase: 'end' },
+		}),
+	);
+};
+
+export const SlotReassignmentDemo: Story = {
+	render: () =>
+		html`<cosmoz-resizable-view
+			id="resizable"
+			style="display:flex; width:800px; height:300px; border:1px solid #ccc;"
+		>
+			<div
+				id="a"
+				slot="previous"
+				style="${panelStyle('#ff6b6b')} min-width:50px;"
+			>
+				<h3>Panel A</h3>
+			</div>
+			<div id="b" slot="next" style="${panelStyle('#4ecdc4')} min-width:50px;">
+				<h3>Panel B</h3>
+			</div>
+		</cosmoz-resizable-view>`,
+	async play({ canvasElement, step }) {
+		const el = canvasElement.querySelector('#resizable') as HTMLElement;
+		const containerLeft = () => el.getBoundingClientRect().left;
+		const panelA = canvasElement.querySelector('#a') as HTMLElement;
+		const panelB = canvasElement.querySelector('#b') as HTMLElement;
+		const width = (panel: HTMLElement) =>
+			Math.round(panel.getBoundingClientRect().width);
+		const swap = () => {
+			for (const panel of [panelA, panelB]) {
+				panel.setAttribute(
+					'slot',
+					panel.getAttribute('slot') === 'previous' ? 'next' : 'previous',
+				);
+			}
+		};
+
+		await step('Drag sets the previous panel width', async () => {
+			dragHandle(el, containerLeft() + 400);
+			await waitFor(() => {
+				expect(width(panelA)).toBe(400);
+			});
+		});
+
+		await step('Swap slots: panel B becomes previous', async () => {
+			swap();
+			await waitFor(() => {
+				expect(
+					el.shadowRoot
+						?.querySelector('slot[name="previous"]')
+						.assignedElements()[0]?.id,
+				).toBe('b');
+			});
+		});
+
+		await step(
+			'Drag after reassignment tracks the cursor (stale bases cleared)',
+			async () => {
+				dragHandle(el, containerLeft() + 300);
+				await waitFor(() => {
+					expect(width(panelB)).toBe(300);
+				});
+				// stale basis on panel A (now in next) must be cleared
+				expect(panelA.style.flexBasis).toBe('');
+			},
+		);
+	},
+};
