@@ -465,4 +465,33 @@ describe('cosmoz-resizable-view', () => {
 			expect(el.querySelector('#a').style.flexBasis).to.equal('');
 		});
 	});
+
+	it('sets data-single-panel with a single slotted element', async () => {
+		const el = await fixture(
+			html`<cosmoz-resizable-view
+				style="display:flex; width:600px; height:300px;"
+			>
+				<div id="only" slot="previous">only</div>
+			</cosmoz-resizable-view>`,
+		);
+		await waitUntil(
+			() => el.shadowRoot.querySelector('cosmoz-resize-handle'),
+			undefined,
+			{ timeout: 1500 },
+		);
+		await waitUntil(() => el.hasAttribute('data-single-panel'), undefined, {
+			timeout: 1500,
+		});
+		expect(el.hasAttribute('data-single-panel')).to.be.true;
+
+		// adding the second panel removes the single-panel state
+		const second = document.createElement('div');
+		second.id = 'second';
+		second.setAttribute('slot', 'next');
+		el.appendChild(second);
+		await waitUntil(() => !el.hasAttribute('data-single-panel'), undefined, {
+			timeout: 1500,
+		});
+		expect(el.hasAttribute('data-single-panel')).to.be.false;
+	});
 });

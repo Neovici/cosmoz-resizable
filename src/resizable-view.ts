@@ -166,18 +166,28 @@ const ResizableView = ({
 	]);
 
 	useEffect(() => {
-		if (!panels.prev || !panels.next) return;
+		if (!panels.prev && !panels.next) return;
 
 		const previous = slotted(prevSlotRef.current);
 		const next = slotted(nextSlotRef.current);
 		const handle = handleRef.current;
-		if (!previous || !next || !handle) return;
 
-		// Slot reassignment: elements may carry an inline flex-basis written
-		// while they occupied the other slot. Stale bases overflow the
-		// container, and flex-shrink then eats part of every drag (the handle
-		// lags behind the cursor). Clear both bases and reapply the persisted
-		// size to the new previous.
+		// Visibility handling works with a single panel: with one slot
+		// empty there is nothing to observe — the single-panel state is
+		// static, so set it directly. data-single-panel CSS takes over.
+		const ro =
+			previous && next
+				? observeVisibility(host, previous, next)
+				: (host.toggleAttribute('data-single-panel', true), null);
+
+		if (!previous || !next || !handle) {
+			return () => ro?.disconnect();
+		}
+
+		// Elements may carry an inline flex-basis written while they
+		// occupied the other slot. Stale bases overflow the container, and
+		// flex-shrink then eats part of every drag. Clear both bases and
+		// reapply the persisted size to the new previous.
 		previous.style.flexBasis = '';
 		next.style.flexBasis = '';
 		const persisted = persistKey ? adapter?.get(persistKey) : undefined;
@@ -201,11 +211,9 @@ const ResizableView = ({
 		});
 		handle.addEventListener('resize-handle', handler as EventListener);
 
-		const ro = observeVisibility(host, previous, next);
-
 		return () => {
 			handle.removeEventListener('resize-handle', handler as EventListener);
-			ro.disconnect();
+			ro?.disconnect();
 		};
 	}, [direction, adapter, persist, host, panels.prev, panels.next]);
 
