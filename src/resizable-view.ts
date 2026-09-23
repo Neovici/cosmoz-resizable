@@ -99,7 +99,10 @@ const ResizableView = ({
 	const prevSlotRef = useRef<HTMLSlotElement>();
 	const nextSlotRef = useRef<HTMLSlotElement>();
 	const defaultSlotRef = useRef<HTMLSlotElement>();
-	const [panelsReady, setPanelsReady] = useState(false);
+	const [panels, setPanels] = useState<{
+		prev: HTMLElement | undefined;
+		next: HTMLElement | undefined;
+	}>({ prev: undefined, next: undefined });
 
 	const persistKey = persist ? `${persist}:${direction}` : undefined;
 
@@ -122,9 +125,15 @@ const ResizableView = ({
 	persistRef.current = persistState;
 
 	const onSlotChange = useCallback(() => {
-		const prev = prevSlotRef.current?.assignedElements()[0];
-		const next = nextSlotRef.current?.assignedElements()[0];
-		if (prev && next) setPanelsReady(true);
+		const prev = prevSlotRef.current?.assignedElements()[0] as
+			| HTMLElement
+			| undefined;
+		const next = nextSlotRef.current?.assignedElements()[0] as
+			| HTMLElement
+			| undefined;
+		setPanels((old) =>
+			old.prev === prev && old.next === next ? old : { prev, next },
+		);
 	}, []);
 
 	const onDefaultSlotChange = useCallback(() => {
@@ -157,12 +166,24 @@ const ResizableView = ({
 	]);
 
 	useEffect(() => {
-		if (!panelsReady) return;
+		if (!panels.prev && !panels.next) return;
 
 		const previous = slotted(prevSlotRef.current);
 		const next = slotted(nextSlotRef.current);
 		const handle = handleRef.current;
-		if (!previous || !next || !handle) return;
+
+		// Visibility handling works with a single panel: with one slot
+		// empty there is nothing to observe — the single-panel state is
+		// static, so set it directly. data-single-panel CSS takes over.
+		const ro =
+			previous && next
+				? observeVisibility(host, previous, next)
+				: (host.toggleAttribute('data-single-panel', true), null);
+
+		// The drag handler only makes sense with both panels present.
+		if (!previous || !next || !handle) {
+			return () => ro?.disconnect();
+		}
 
 		const handler = createFlexResize({
 			container: host,
@@ -182,13 +203,11 @@ const ResizableView = ({
 		});
 		handle.addEventListener('resize-handle', handler as EventListener);
 
-		const ro = observeVisibility(host, previous, next);
-
 		return () => {
 			handle.removeEventListener('resize-handle', handler as EventListener);
-			ro.disconnect();
+			ro?.disconnect();
 		};
-	}, [direction, adapter, persist, host, panelsReady]);
+	}, [direction, adapter, persist, host, panels.prev, panels.next]);
 
 	return html`<slot
 			${ref(defaultSlotRef)}
