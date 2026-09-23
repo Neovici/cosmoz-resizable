@@ -273,16 +273,13 @@ export const SlotReassignmentDemo: Story = {
 export const SinglePanelDemo: Story = {
 	render: () =>
 		html`<cosmoz-resizable-view
-				id="resizable"
-				style="display:flex; width:800px; height:300px; border:1px solid #ccc;"
-			>
-				<div id="only" slot="previous" style="${panelStyle('#ff6b6b')}">
-					<h3>Only panel</h3>
-				</div>
-			</cosmoz-resizable-view>
-			<button id="toggleSecond" style="margin-top:10px;">
-				Add / remove second panel
-			</button>`,
+			id="resizable"
+			style="display:flex; width:800px; height:300px; border:1px solid #ccc;"
+		>
+			<div id="only" slot="previous" style="${panelStyle('#ff6b6b')}">
+				<h3>Only panel</h3>
+			</div>
+		</cosmoz-resizable-view>`,
 	async play({ canvasElement, step }) {
 		const el = canvasElement.querySelector('#resizable') as HTMLElement;
 		const onlyPanel = canvasElement.querySelector('#only') as HTMLElement;
