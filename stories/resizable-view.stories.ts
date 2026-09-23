@@ -249,11 +249,10 @@ export const SlotReassignmentDemo: Story = {
 		await step('Swap slots: panel B becomes previous', async () => {
 			swap();
 			await waitFor(() => {
-				expect(
-					el.shadowRoot
-						?.querySelector('slot[name="previous"]')
-						.assignedElements()[0]?.id,
-				).toBe('b');
+				const assigned = el.shadowRoot
+					?.querySelector<HTMLSlotElement>('slot[name="previous"]')
+					?.assignedElements()[0]?.id;
+				expect(assigned).toBe('b');
 			});
 		});
 
