@@ -1,5 +1,22 @@
 # @neovici/cosmoz-resizable
 
+## 2.3.0
+
+### Minor Changes
+
+- 3b5470e: Wrap `previous`/`next` slots in shadow-DOM panel `<div>`s so the component owns panel layout, instead of styling slotted elements directly.
+  - Slotted content is forced to fill its panel (`flex: 1 1 100% !important`, `min-width/height: 0 !important`) — outside flex/min/max styles on user elements no longer affect panel layout, and the component no longer writes inline `flex-basis` to user elements.
+  - Panels apply `contain: layout style`, isolating layout/style invalidation inside each panel.
+  - `initial-size` / `min-size` and persisted sizes now style the panel wrappers; new `panel-previous` / `panel-next` `part` attributes expose them for external styling.
+  - Hidden-panel behavior: a slotted panel hidden via `display: none` collapses its wrapper to zero size (`data-hidden`) instead of removing it, and `data-single-panel` is still set.
+  - New `max-size` attribute (+ `-horizontal` / `-vertical` variants), symmetric with `min-size`: caps the previous/next panel during drag and in layout, replacing the old pattern of capping via CSS `max-width`/`max-height` on slotted children.
+
+- 6fd8a1c: Add a `reversed` attribute to `cosmoz-resizable-view` that flips the visual order of the panels using `row-reverse` / `column-reverse` flex directions: the previous panel renders on the right (horizontal) or bottom (vertical), and the resize handle drags from that end edge accordingly.
+  - The `cosmoz-resize-handle` inside the view receives `data-reversed` to mirror its enlarged hit area and hover highlight to the correct side.
+  - Works with `initial-size`, `min-size`, `max-size` and `persist` unchanged — sizes stay relative to the previous panel.
+
+- b33d99a: Add typed element interfaces and `HTMLElementTagNameMap` augmentation for `cosmoz-resizable-view` and `cosmoz-resize-handle`, so `querySelector('cosmoz-resizable-view')` returns a fully typed element (props like `direction`, `persist`, `initialSize`, ... readable in JS). New exported types `ResizableViewProps` and `ResizeHandleProps`.
+
 ## 2.2.1
 
 ### Patch Changes
