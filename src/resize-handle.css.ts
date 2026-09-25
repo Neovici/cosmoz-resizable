@@ -53,6 +53,21 @@ export const styles = css`
 		flex: 1;
 	}
 
+	:host([reversed][data-direction='horizontal'])::after {
+		left: 2px;
+		right: -2px;
+	}
+
+	:host([reversed][data-direction='vertical'])::after {
+		top: 2px;
+		bottom: -2px;
+	}
+
+	:host([reversed][data-direction='vertical']:hover)::before,
+	:host([reversed][data-direction='vertical'][data-dragging])::before {
+		box-shadow: 0 1px 0 1px var(--cz-accent-color);
+	}
+
 	:host(:hover)::before,
 	:host([data-dragging])::before {
 		background: var(--cz-accent-color);

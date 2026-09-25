@@ -466,4 +466,115 @@ describe('cosmoz-resizable-view', () => {
 		fire('move', 900, start.top);
 		expect(panel.getBoundingClientRect().width).to.be.at.most(360);
 	});
+
+	it('reversed sets flex-direction row-reverse and data-reversed', async () => {
+		const el = await fixture(
+			html`<cosmoz-resizable-view
+				style="display:flex; width:600px; height:300px;"
+				reversed
+				initial-size="200px"
+			>
+				<div id="prev" slot="previous">prev</div>
+				<div id="next" slot="next">next</div>
+			</cosmoz-resizable-view>`,
+		);
+		await waitUntil(
+			() => el.shadowRoot.querySelector('cosmoz-resize-handle'),
+			undefined,
+			{ timeout: 3000 },
+		);
+		expect(el.hasAttribute('reversed')).to.be.true;
+		expect(el.reversed).to.be.true;
+		expect(getComputedStyle(el).flexDirection).to.equal('row-reverse');
+		const handle = el.shadowRoot.querySelector('cosmoz-resize-handle');
+		expect(handle.hasAttribute('reversed')).to.be.true;
+		// previous panel is now the rightmost item
+		expect(getPanel(el, 'previous').getBoundingClientRect().right).to.equal(
+			el.getBoundingClientRect().right,
+		);
+		expect(getPanel(el, 'previous').offsetWidth).to.equal(200);
+	});
+
+	it('reversed vertical sets flex-direction column-reverse', async () => {
+		const el = await fixture(
+			html`<cosmoz-resizable-view
+				style="display:flex; width:600px; height:600px;"
+				direction="vertical"
+				reversed
+				initial-size="150px"
+			>
+				<div id="prev" slot="previous">prev</div>
+				<div id="next" slot="next">next</div>
+			</cosmoz-resizable-view>`,
+		);
+		await waitUntil(
+			() => el.shadowRoot.querySelector('cosmoz-resize-handle'),
+			undefined,
+			{ timeout: 3000 },
+		);
+		expect(getComputedStyle(el).flexDirection).to.equal('column-reverse');
+		expect(getPanel(el, 'previous').getBoundingClientRect().bottom).to.equal(
+			el.getBoundingClientRect().bottom,
+		);
+		expect(getPanel(el, 'previous').offsetHeight).to.equal(150);
+	});
+
+	it('resizes from the right edge when reversed', async () => {
+		const el = await fixture(
+			html`<cosmoz-resizable-view
+				style="display:flex; width:600px; height:300px;"
+				reversed
+				initial-size="300px"
+			>
+				<div id="prev" slot="previous">prev</div>
+				<div id="next" slot="next">next</div>
+			</cosmoz-resizable-view>`,
+		);
+		await waitUntil(
+			() => el.shadowRoot.querySelector('cosmoz-resize-handle'),
+			undefined,
+			{ timeout: 3000 },
+		);
+		const panel = getPanel(el, 'previous');
+		const handle = el.shadowRoot.querySelector('cosmoz-resize-handle');
+		const hostRect = el.getBoundingClientRect();
+		const fire = (phase, x, y) =>
+			handle.dispatchEvent(
+				new CustomEvent('resize-handle', {
+					detail: { phase, mousePosition: { x, y } },
+					bubbles: true,
+				}),
+			);
+		// pointer 150px from the left = 450px from the right edge
+		fire('start', hostRect.left + 150, hostRect.top);
+		fire('move', hostRect.left + 150, hostRect.top);
+		await new Promise((r) => requestAnimationFrame(r));
+		expect(panel.getBoundingClientRect().width).to.equal(450);
+	});
+
+	it('removing the reversed attribute restores normal layout', async () => {
+		const el = await fixture(
+			html`<cosmoz-resizable-view
+				style="display:flex; width:600px; height:300px;"
+				reversed
+				initial-size="200px"
+			>
+				<div id="prev" slot="previous">prev</div>
+				<div id="next" slot="next">next</div>
+			</cosmoz-resizable-view>`,
+		);
+		await waitUntil(
+			() => el.shadowRoot.querySelector('cosmoz-resize-handle'),
+			undefined,
+			{ timeout: 3000 },
+		);
+		el.removeAttribute('reversed');
+		await waitUntil(() => !el.hasAttribute('data-reversed'), undefined, {
+			timeout: 3000,
+		});
+		expect(getComputedStyle(el).flexDirection).to.equal('row');
+		expect(getPanel(el, 'previous').getBoundingClientRect().left).to.equal(
+			el.getBoundingClientRect().left,
+		);
+	});
 });

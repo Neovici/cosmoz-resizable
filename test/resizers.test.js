@@ -17,8 +17,10 @@ const spy = () => {
 
 const setupContainer = (rect) => {
 	const container = document.createElement('div');
+	// Derive right/bottom like a real DOMRect.
+	const full = { right: rect.width, bottom: rect.height, ...rect };
 	Object.defineProperty(container, 'getBoundingClientRect', {
-		value: () => rect,
+		value: () => full,
 	});
 	return container;
 };
@@ -190,6 +192,76 @@ describe('createFlexResize', () => {
 		handler(makeEvent('start', 50, 0));
 		handler(makeEvent('move', 50, 0));
 		expect(onResize.firstCall()[0]).to.equal(300);
+	});
+
+	it('reversed horizontal measures from the right edge', () => {
+		const container = setupContainer({
+			left: 0,
+			top: 0,
+			width: 1000,
+			height: 600,
+		});
+		const previous = setupPrevious();
+		const handler = createFlexResize({
+			container,
+			previous,
+			direction: 'horizontal',
+			reversed: true,
+			onResize,
+		});
+
+		handler(makeEvent('start', 600, 0));
+		handler(makeEvent('move', 600, 0));
+		// 1000 - 600 = 400
+		expect(onResize.firstCall()[0]).to.equal(400);
+	});
+
+	it('reversed vertical measures from the bottom edge', () => {
+		const container = setupContainer({
+			left: 0,
+			top: 0,
+			width: 600,
+			height: 1000,
+		});
+		const previous = setupPrevious();
+		const handler = createFlexResize({
+			container,
+			previous,
+			direction: 'vertical',
+			reversed: true,
+			onResize,
+		});
+
+		handler(makeEvent('start', 0, 700));
+		handler(makeEvent('move', 0, 700));
+		// 1000 - 700 = 300
+		expect(onResize.firstCall()[0]).to.equal(300);
+	});
+
+	it('reversed respects min and max bounds', () => {
+		const container = setupContainer({
+			left: 0,
+			top: 0,
+			width: 1000,
+			height: 600,
+		});
+		const previous = setupPrevious({ minWidth: '100px', maxWidth: '360px' });
+		const handler = createFlexResize({
+			container,
+			previous,
+			direction: 'horizontal',
+			reversed: true,
+			onResize,
+		});
+
+		handler(makeEvent('start', 900, 0));
+		handler(makeEvent('move', 900, 0));
+		// raw = 100, clamped up to min 100
+		expect(onResize.firstCall()[0]).to.equal(100);
+
+		handler(makeEvent('move', 200, 0));
+		// raw = 800, clamped down to max 360
+		expect(onResize.calls[1][0]).to.equal(360);
 	});
 
 	it('on end: calls onResizeEnd', () => {

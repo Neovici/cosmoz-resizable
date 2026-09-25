@@ -19,8 +19,13 @@ const axis = (
 	position: MousePosition,
 	rect: DOMRect,
 	direction: ResizerDirection,
-): number =>
-	direction === 'horizontal' ? position.x - rect.left : position.y - rect.top;
+	reversed?: boolean,
+): number => {
+	if (direction === 'horizontal') {
+		return reversed ? rect.right - position.x : position.x - rect.left;
+	}
+	return reversed ? rect.bottom - position.y : position.y - rect.top;
+};
 
 const parsePx = (value: string): number | undefined => {
 	const n = parseFloat(value);
@@ -53,8 +58,9 @@ const computePx = (
 	rect: DOMRect,
 	direction: ResizerDirection,
 	bounds: { min: number; max: number },
+	reversed?: boolean,
 ): number => {
-	const raw = axis(mousePosition, rect, direction);
+	const raw = axis(mousePosition, rect, direction, reversed);
 	// min wins over max, matching CSS flexbox behavior.
 	return Math.max(Math.min(raw, bounds.max), bounds.min);
 };
@@ -80,6 +86,7 @@ export const createFlexResize = (config: ResizeConfig): ResizeHandler => {
 			_snapshot.rect,
 			config.direction,
 			_snapshot.bounds,
+			config.reversed,
 		);
 
 		if (phase === 'move') {

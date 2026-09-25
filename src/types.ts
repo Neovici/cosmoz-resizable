@@ -6,6 +6,10 @@ export type ResizerDirection = 'horizontal' | 'vertical';
  */
 export interface ResizableViewProps {
 	direction?: ResizerDirection;
+	/**
+	 * Set via the `reversed` attribute; reflected to `host.reversed`.
+	 */
+	reversed?: boolean;
 	persist?: string;
 	initialSize?: string;
 	initialSizeHorizontal?: string;
@@ -24,6 +28,11 @@ export interface ResizableViewProps {
  */
 export interface ResizeHandleProps {
 	direction?: ResizerDirection;
+	/**
+	 * Set via the `reversed` attribute; observed so `handle.reversed` is
+	 * readable in JS. Rendering only needs CSS `:host([reversed])`.
+	 */
+	reversed?: boolean;
 }
 
 export interface MousePosition {
@@ -54,6 +63,11 @@ export interface ResizeConfig {
 	container: HTMLElement;
 	previous: HTMLElement;
 	direction: ResizerDirection;
+	/**
+	 * Visual order is flipped (row-reverse / column-reverse), so the
+	 * previous panel grows from the container's end edge instead of its start.
+	 */
+	reversed?: boolean;
 	onResize?: (px: number) => void;
 	onResizeEnd?: () => void;
 }
