@@ -70,21 +70,24 @@ handle.addEventListener(
 
 ## Attributes
 
-| Attribute                 | Type   | Default      | Description                                                     |
-| ------------------------- | ------ | ------------ | --------------------------------------------------------------- |
-| `direction`               | string | `horizontal` | Split direction: `horizontal` (col-resize) or `vertical`        |
-| `persist`                 | string | —            | Persistence key; stores the previous panel size in localStorage |
-| `initial-size`            | string | —            | Initial panel sizes (see Size values)                           |
-| `initial-size-horizontal` | string | —            | Override for `direction="horizontal"`                           |
-| `initial-size-vertical`   | string | —            | Override for `direction="vertical"`                             |
-| `min-size`                | string | —            | Minimum panel sizes; drag and layout respect it                 |
-| `min-size-horizontal`     | string | —            | Override for `direction="horizontal"`                           |
-| `min-size-vertical`       | string | —            | Override for `direction="vertical"`                             |
-| `max-size`                | string | —            | Maximum panel sizes; drag and layout respect it                 |
-| `max-size-horizontal`     | string | —            | Override for `direction="horizontal"`                           |
-| `max-size-vertical`       | string | —            | Override for `direction="vertical"`                             |
+| Attribute                 | Type    | Default      | Description                                                     |
+| ------------------------- | ------- | ------------ | --------------------------------------------------------------- |
+| `direction`               | string  | `horizontal` | Split direction: `horizontal` (col-resize) or `vertical`        |
+| `reversed`                | boolean | `false`      | Flip visual order: previous panel renders on the right/bottom   |
+| `persist`                 | string  | —            | Persistence key; stores the previous panel size in localStorage |
+| `initial-size`            | string  | —            | Initial panel sizes (see Size values)                           |
+| `initial-size-horizontal` | string  | —            | Override for `direction="horizontal"`                           |
+| `initial-size-vertical`   | string  | —            | Override for `direction="vertical"`                             |
+| `min-size`                | string  | —            | Minimum panel sizes; drag and layout respect it                 |
+| `min-size-horizontal`     | string  | —            | Override for `direction="horizontal"`                           |
+| `min-size-vertical`       | string  | —            | Override for `direction="vertical"`                             |
+| `max-size`                | string  | —            | Maximum panel sizes; drag and layout respect it                 |
+| `max-size-horizontal`     | string  | —            | Override for `direction="horizontal"`                           |
+| `max-size-vertical`       | string  | —            | Override for `direction="vertical"`                             |
 
 Direction-specific variants take precedence over the base attribute when the active direction matches.
+
+With `reversed`, the previous panel is rendered on the trailing edge (`row-reverse` / `column-reverse`): the previous panel appears on the **right** in horizontal mode, or at the **bottom** in vertical mode, and dragging measures from that edge. Panel sizing, bounds and persistence behave identically to normal mode.
 
 ## Size values
 

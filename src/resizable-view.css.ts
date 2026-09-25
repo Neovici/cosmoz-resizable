@@ -13,6 +13,14 @@ export const styles = css`
 		flex-direction: column;
 	}
 
+	:host([reversed][data-direction='horizontal']) {
+		flex-direction: row-reverse;
+	}
+
+	:host([reversed][data-direction='vertical']) {
+		flex-direction: column-reverse;
+	}
+
 	.panel {
 		display: flex;
 		flex-direction: row;

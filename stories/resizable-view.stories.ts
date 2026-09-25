@@ -153,6 +153,100 @@ export const ListDetailsSplit: Story = {
 	},
 };
 
+export const ReversedDemo: Story = {
+	render: () =>
+		html`<cosmoz-resizable-view
+			style="display:flex; width:600px; height:300px;"
+			reversed
+			initial-size="50%"
+		>
+			<div slot="previous" id="prev" style="${panelStyle('#ff6b6b')}">
+				<h3>Previous (visually right)</h3>
+			</div>
+			<div slot="next" id="next" style="${panelStyle('#4ecdc4')}">
+				<h3>Next (visually left)</h3>
+			</div>
+		</cosmoz-resizable-view>`,
+	async play({ canvasElement, step }) {
+		// Typed via the HTMLElementTagNameMap augmentation.
+		const getView = () =>
+			canvasElement.querySelector('cosmoz-resizable-view')!;
+		const getPanel = () =>
+			getView().shadowRoot!.querySelector(
+				'.panel[data-panel=\'previous\']',
+			) as HTMLElement;
+		const getHandle = () =>
+			getView().shadowRoot!.querySelector(
+				'cosmoz-resize-handle',
+			) as HTMLElement;
+		// Retry-friendly drag: firing inside waitFor tolerates the async
+		// handler swap after toggling `reversed`.
+		const dragTo = async (x: number, width: number) => {
+			const rect = getView().getBoundingClientRect();
+			await waitFor(() => {
+				getHandle().dispatchEvent(
+					new CustomEvent('resize-handle', {
+						detail: { phase: 'start', mousePosition: { x, y: rect.top } },
+						bubbles: true,
+					}),
+				);
+				getHandle().dispatchEvent(
+					new CustomEvent('resize-handle', {
+						detail: { phase: 'move', mousePosition: { x, y: rect.top } },
+						bubbles: true,
+					}),
+				);
+				expect(getPanel().getBoundingClientRect().width).toBe(width);
+			});
+		};
+
+		await step('Renders with reversed visual order', async () => {
+			await waitFor(() => {
+				const el = getView();
+				expect(el.hasAttribute('reversed')).toBe(true);
+				expect(el.reversed).toBe(true);
+				const prev = getPanel();
+				expect(prev.getBoundingClientRect().right).toBe(
+					el.getBoundingClientRect().right,
+				);
+			});
+		});
+
+		await step(
+			'Dragging resizes the previous panel from the right edge',
+			async () => {
+				await dragTo(getView().getBoundingClientRect().left + 150, 450);
+			},
+		);
+
+		await step('Removing reversed restores left-edge dragging', async () => {
+			const el = getView();
+			el.removeAttribute('reversed');
+			await waitFor(() => {
+				expect(getComputedStyle(el).flexDirection).toBe('row');
+				expect(el.reversed).toBeFalsy();
+				expect(getPanel().getBoundingClientRect().left).toBe(
+					el.getBoundingClientRect().left,
+				);
+			});
+			await dragTo(getView().getBoundingClientRect().left + 200, 200);
+		});
+
+		await step('Re-adding reversed resumes right-edge dragging', async () => {
+			const el = getView();
+			el.setAttribute('reversed', '');
+			await waitFor(() => {
+				expect(getComputedStyle(el).flexDirection).toBe('row-reverse');
+				expect(el.reversed).toBe(true);
+				expect(getPanel().getBoundingClientRect().right).toBe(
+					el.getBoundingClientRect().right,
+				);
+			});
+			await dragTo(getView().getBoundingClientRect().left + 100, 500);
+		});
+	},
+};
+
 export const CappedInitialSize: Story = {
 	render: () =>
 		html`<cosmoz-resizable-view

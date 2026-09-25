@@ -93,6 +93,7 @@ const setupResize = ({
 	host,
 	handle,
 	direction,
+	reversed,
 	persistRef,
 	prevPanelRef,
 	nextPanelRef,
@@ -102,6 +103,7 @@ const setupResize = ({
 	host: HTMLElement;
 	handle: HTMLElement | undefined;
 	direction: ResizerDirection;
+	reversed?: boolean;
 	persistRef: {
 		current: ((state: PersistedState) => void) | undefined;
 	};
@@ -122,6 +124,7 @@ const setupResize = ({
 		container: host,
 		previous: previousPanel,
 		direction,
+		reversed,
 		onResize: (px) => {
 			previousPanel.style.flexBasis = `${px}px`;
 		},
@@ -151,6 +154,7 @@ const setupResize = ({
 
 const ResizableView = ({
 	direction = 'horizontal',
+	reversed,
 	persist,
 	initialSize,
 	initialSizeHorizontal,
@@ -237,6 +241,7 @@ const ResizableView = ({
 			host,
 			handle: handleRef.current,
 			direction,
+			reversed: reversed === true,
 			persistRef,
 			prevPanelRef,
 			nextPanelRef,
@@ -245,7 +250,7 @@ const ResizableView = ({
 		});
 
 		return teardown;
-	}, [direction, adapter, persist, host, panelsReady]);
+	}, [direction, reversed, adapter, persist, host, panelsReady]);
 
 	return html`<slot
 			${ref(defaultSlotRef)}
@@ -265,6 +270,7 @@ const ResizableView = ({
 		</div>
 		<cosmoz-resize-handle
 			direction=${direction}
+			?reversed=${reversed === true}
 			${ref(handleRef)}
 		></cosmoz-resize-handle>
 		<div class="panel" data-panel="next" ${ref(nextPanelRef)} part="panel-next">
@@ -285,6 +291,7 @@ customElements.define(
 		styleSheets: [styles],
 		observedAttributes: [
 			'direction',
+			'reversed',
 			'persist',
 			'initial-size',
 			'initial-size-horizontal',

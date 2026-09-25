@@ -14,7 +14,7 @@ customElements.define(
 	'cosmoz-resize-handle',
 	component(ResizeHandle, {
 		styleSheets: [styles],
-		observedAttributes: ['direction'],
+		observedAttributes: ['direction', 'reversed'],
 	}),
 );
 
