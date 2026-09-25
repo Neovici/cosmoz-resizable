@@ -1,5 +1,31 @@
 export type ResizerDirection = 'horizontal' | 'vertical';
 
+/**
+ * Props of `<cosmoz-resizable-view>`; implemented by the element (see the
+ * `HTMLElementTagNameMap` augmentation for typed lookups).
+ */
+export interface ResizableViewProps {
+	direction?: ResizerDirection;
+	persist?: string;
+	initialSize?: string;
+	initialSizeHorizontal?: string;
+	initialSizeVertical?: string;
+	minSize?: string;
+	minSizeHorizontal?: string;
+	minSizeVertical?: string;
+	maxSize?: string;
+	maxSizeHorizontal?: string;
+	maxSizeVertical?: string;
+}
+
+/**
+ * Props of `<cosmoz-resize-handle>`; implemented by the element (see the
+ * `HTMLElementTagNameMap` augmentation for typed lookups).
+ */
+export interface ResizeHandleProps {
+	direction?: ResizerDirection;
+}
+
 export interface MousePosition {
 	x: number;
 	y: number;
