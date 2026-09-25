@@ -7,7 +7,11 @@ export type {
 	MousePosition,
 	PersistAdapter,
 	PersistedState,
+	ResizableViewElement,
 	ResizeConfig,
+	ResizeEventDetail,
+	ResizeHandleElement,
+	ResizeHandler,
 	ResizePhase,
 	ResizerDirection,
 } from './types';

@@ -14,9 +14,14 @@ import { parseSizeAttr } from './parse-size';
 import { styles } from './resizable-view.css';
 import './resize-handle';
 import { createFlexResize } from './resizers';
-import { PersistedState, ResizerDirection } from './types';
+import {
+	PersistedState,
+	ResizableViewElement,
+	ResizeHandleElement,
+	ResizerDirection,
+} from './types';
 
-interface ResizableViewProps {
+export interface ResizableViewProps {
 	direction?: ResizerDirection;
 	persist?: string;
 	initialSize?: string;
@@ -280,6 +285,13 @@ const ResizableView = ({
 			<slot name="next" ${ref(nextSlotRef)} @slotchange=${onSlotChange}></slot>
 		</div>`;
 };
+
+declare global {
+	interface HTMLElementTagNameMap {
+		'cosmoz-resizable-view': HTMLElement & ResizableViewElement;
+		'cosmoz-resize-handle': HTMLElement & ResizeHandleElement;
+	}
+}
 
 customElements.define(
 	'cosmoz-resizable-view',
