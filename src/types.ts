@@ -19,9 +19,10 @@ export interface ResizableViewProps {
 }
 
 /**
- * Interface implemented by `<cosmoz-resize-handle>`.
+ * Props of `<cosmoz-resize-handle>`; implemented by the element (see the
+ * `HTMLElementTagNameMap` augmentation for typed lookups).
  */
-export interface ResizeHandleElement {
+export interface ResizeHandleProps {
 	direction?: ResizerDirection;
 }
 

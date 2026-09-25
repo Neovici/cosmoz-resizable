@@ -10,7 +10,7 @@ export type {
 	ResizableViewProps,
 	ResizeConfig,
 	ResizeEventDetail,
-	ResizeHandleElement,
+	ResizeHandleProps,
 	ResizeHandler,
 	ResizePhase,
 	ResizerDirection,

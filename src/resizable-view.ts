@@ -17,7 +17,7 @@ import { createFlexResize } from './resizers';
 import {
 	PersistedState,
 	ResizableViewProps,
-	ResizeHandleElement,
+	ResizeHandleProps,
 	ResizerDirection,
 } from './types';
 
@@ -275,7 +275,7 @@ const ResizableView = ({
 declare global {
 	interface HTMLElementTagNameMap {
 		'cosmoz-resizable-view': HTMLElement & ResizableViewProps;
-		'cosmoz-resize-handle': HTMLElement & ResizeHandleElement;
+		'cosmoz-resize-handle': HTMLElement & ResizeHandleProps;
 	}
 }
 
