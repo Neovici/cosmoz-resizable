@@ -30,13 +30,17 @@ const parsePx = (value: string): number | undefined => {
 const readBounds = (
 	el: HTMLElement,
 	direction: ResizerDirection,
-): { min: number } => {
+): { min: number; max: number } => {
 	const style = getComputedStyle(el);
 	const min =
 		direction === 'horizontal'
 			? (parsePx(style.minWidth) ?? 0)
 			: (parsePx(style.minHeight) ?? 0);
-	return { min };
+	const max =
+		direction === 'horizontal'
+			? (parsePx(style.maxWidth) ?? Infinity)
+			: (parsePx(style.maxHeight) ?? Infinity);
+	return { min, max };
 };
 
 const snapshot = (config: ResizeConfig) => {
@@ -48,11 +52,17 @@ const computePx = (
 	mousePosition: MousePosition,
 	rect: DOMRect,
 	direction: ResizerDirection,
-	bounds: { min: number },
-): number => Math.max(bounds.min, axis(mousePosition, rect, direction));
+	bounds: { min: number; max: number },
+): number => {
+	const raw = axis(mousePosition, rect, direction);
+	// min wins over max, matching CSS flexbox behavior.
+	return Math.max(Math.min(raw, bounds.max), bounds.min);
+};
 
 export const createFlexResize = (config: ResizeConfig): ResizeHandler => {
-	let _snapshot: { rect: DOMRect; bounds: { min: number } } | undefined;
+	let _snapshot:
+		| { rect: DOMRect; bounds: { min: number; max: number } }
+		| undefined;
 
 	return (e) => {
 		const { phase, mousePosition } = e.detail;

@@ -14,18 +14,15 @@ export default meta;
 type Story = StoryObj;
 
 const panelStyle = (bg: string) =>
-	`background:${bg}; display:flex; align-items:center; justify-content:center; color:white; overflow:auto;`;
+	`background:${bg}; display:flex; align-items:center; justify-content:center; color:white;`;
 
 export const BasicDemo: Story = {
 	render: () =>
 		html`<cosmoz-resizable-view
 			style="display:flex; width:600px; height:300px; border:1px solid #ccc;"
+			initial-size="50%"
 		>
-			<div
-				slot="previous"
-				id="prev"
-				style="${panelStyle('#ff6b6b')} flex-basis: 50%;"
-			>
+			<div slot="previous" id="prev" style="${panelStyle('#ff6b6b')}">
 				<h3>Left Panel</h3>
 			</div>
 			<div slot="next" id="next" style="${panelStyle('#4ecdc4')}">
@@ -42,7 +39,7 @@ export const BasicDemo: Story = {
 		});
 
 		await step(
-			'Handle is rendered in shadow DOM between named slots',
+			'Handle is rendered in shadow DOM between panel wrappers',
 			async () => {
 				await waitFor(() => {
 					const handle = canvasElement.shadowRoot?.querySelector(
@@ -60,11 +57,9 @@ export const VerticalDemo: Story = {
 		html`<cosmoz-resizable-view
 			style="display:flex; flex-direction:column; width:600px; height:400px; border:1px solid #ccc;"
 			direction="vertical"
+			initial-size="50%"
 		>
-			<div
-				slot="previous"
-				style="${panelStyle('#ff6b6b')} padding:20px; flex-basis: 50%;"
-			>
+			<div slot="previous" style="${panelStyle('#ff6b6b')} padding:20px;">
 				<h3>Top Panel</h3>
 			</div>
 			<div slot="next" style="${panelStyle('#4ecdc4')} padding:20px;">
@@ -91,19 +86,18 @@ export const MultiplePanels: Story = {
 	render: () =>
 		html`<cosmoz-resizable-view
 			style="display:flex; width:600px; height:300px; border:1px solid #ccc;"
+			initial-size="50%"
 		>
-			<div slot="previous" style="${panelStyle('#ff6b6b')} flex-basis: 50%;">
+			<div slot="previous" style="${panelStyle('#ff6b6b')}">
 				<h3>Left Panel</h3>
 			</div>
 			<cosmoz-resizable-view
 				slot="next"
 				direction="vertical"
 				style="display:flex;"
+				initial-size="50%"
 			>
-				<div
-					slot="previous"
-					style="${panelStyle('#ffa726')} padding:10px; flex-basis: 50%;"
-				>
+				<div slot="previous" style="${panelStyle('#ffa726')} padding:10px;">
 					<h3>Top Panel</h3>
 				</div>
 				<div slot="next" style="${panelStyle('#45b7d1')} padding:10px;">
@@ -134,12 +128,10 @@ export const ListDetailsSplit: Story = {
 	render: () =>
 		html`<cosmoz-resizable-view
 			style="display:flex; width:800px; height:300px; border:1px solid #ccc;"
+			initial-size="25%"
+			min-size="300"
 		>
-			<div
-				id="list"
-				slot="previous"
-				style="${panelStyle('#ff6b6b')} flex-basis: 25%; min-width: 300px;"
-			>
+			<div id="list" slot="previous" style="${panelStyle('#ff6b6b')}">
 				<h3>List (25% or 300px min)</h3>
 			</div>
 			<div id="details" slot="next" style="${panelStyle('#4ecdc4')}">
@@ -147,10 +139,15 @@ export const ListDetailsSplit: Story = {
 			</div>
 		</cosmoz-resizable-view>`,
 	async play({ canvasElement, step }) {
-		await step('Left panel respects CSS min-width', async () => {
+		await step('Previous panel respects min-size', async () => {
 			await waitFor(() => {
-				const list = canvasElement.querySelector('#list') as HTMLElement;
-				expect(list.offsetWidth).toBeGreaterThanOrEqual(300);
+				const el = canvasElement.querySelector(
+					'cosmoz-resizable-view',
+				) as HTMLElement;
+				const panel = el.shadowRoot!.querySelector(
+					'.panel[data-panel=\'previous\']',
+				) as HTMLElement;
+				expect(panel.offsetWidth).toBeGreaterThanOrEqual(300);
 			});
 		});
 	},
@@ -160,23 +157,39 @@ export const CappedInitialSize: Story = {
 	render: () =>
 		html`<cosmoz-resizable-view
 			style="display:flex; width:1000px; height:300px; border:1px solid #ccc;"
+			initial-size="360px"
+			max-size="360"
 		>
-			<div
-				id="list"
-				slot="previous"
-				style="${panelStyle('#ff6b6b')} flex-basis: 40%; max-width: 360px;"
-			>
-				<h3>List (40% or 360px max)</h3>
+			<div id="list" slot="previous" style="${panelStyle('#ff6b6b')}">
+				<h3>List (capped at 360px)</h3>
 			</div>
 			<div id="details" slot="next" style="${panelStyle('#4ecdc4')}">
 				<h3>Details</h3>
 			</div>
 		</cosmoz-resizable-view>`,
 	async play({ canvasElement, step }) {
-		await step('Left panel capped at 360px by CSS max-width', async () => {
+		await step('Previous panel capped at 360px', async () => {
+			const el = canvasElement.querySelector(
+				'cosmoz-resizable-view',
+			) as HTMLElement;
+			const handle = el.shadowRoot!.querySelector(
+				'cosmoz-resize-handle',
+			) as HTMLElement;
+			const rect = handle.getBoundingClientRect();
+			const fire = (phase: string, x: number, y: number) =>
+				handle.dispatchEvent(
+					new CustomEvent('resize-handle', {
+						detail: { phase, mousePosition: { x, y } },
+						bubbles: true,
+					}),
+				);
+			fire('start', rect.left, rect.top);
+			fire('move', 900, rect.top);
 			await waitFor(() => {
-				const list = canvasElement.querySelector('#list') as HTMLElement;
-				expect(list.offsetWidth).toBeLessThanOrEqual(360);
+				const panel = el.shadowRoot!.querySelector(
+					'.panel[data-panel=\'previous\']',
+				) as HTMLElement;
+				expect(panel.offsetWidth).toBeLessThanOrEqual(360);
 			});
 		});
 	},

@@ -32,6 +32,8 @@ const setupPrevious = (style = {}) => {
 		value: () => ({
 			minWidth: style.minWidth ?? '0px',
 			minHeight: style.minHeight ?? '0px',
+			maxWidth: style.maxWidth ?? 'none',
+			maxHeight: style.maxHeight ?? 'none',
 		}),
 		configurable: true,
 	});
@@ -128,6 +130,66 @@ describe('createFlexResize', () => {
 		handler(makeEvent('start', 0, 50));
 		handler(makeEvent('move', 0, 50));
 		expect(onResize.firstCall()[0]).to.equal(200);
+	});
+
+	it('clamps to computed max-width (horizontal)', () => {
+		const container = setupContainer({
+			left: 0,
+			top: 0,
+			width: 1000,
+			height: 600,
+		});
+		const previous = setupPrevious({ maxWidth: '360px' });
+		const handler = createFlexResize({
+			container,
+			previous,
+			direction: 'horizontal',
+			onResize,
+		});
+
+		handler(makeEvent('start', 900, 0));
+		handler(makeEvent('move', 900, 0));
+		expect(onResize.firstCall()[0]).to.equal(360);
+	});
+
+	it('clamps to computed max-height (vertical)', () => {
+		const container = setupContainer({
+			left: 0,
+			top: 0,
+			width: 600,
+			height: 1000,
+		});
+		const previous = setupPrevious({ maxHeight: '250px' });
+		const handler = createFlexResize({
+			container,
+			previous,
+			direction: 'vertical',
+			onResize,
+		});
+
+		handler(makeEvent('start', 0, 800));
+		handler(makeEvent('move', 0, 800));
+		expect(onResize.firstCall()[0]).to.equal(250);
+	});
+
+	it('min wins when min and max conflict', () => {
+		const container = setupContainer({
+			left: 0,
+			top: 0,
+			width: 1000,
+			height: 600,
+		});
+		const previous = setupPrevious({ minWidth: '300px', maxWidth: '100px' });
+		const handler = createFlexResize({
+			container,
+			previous,
+			direction: 'horizontal',
+			onResize,
+		});
+
+		handler(makeEvent('start', 50, 0));
+		handler(makeEvent('move', 50, 0));
+		expect(onResize.firstCall()[0]).to.equal(300);
 	});
 
 	it('on end: calls onResizeEnd', () => {

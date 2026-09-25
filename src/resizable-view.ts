@@ -25,6 +25,9 @@ interface ResizableViewProps {
 	minSize?: string;
 	minSizeHorizontal?: string;
 	minSizeVertical?: string;
+	maxSize?: string;
+	maxSizeHorizontal?: string;
+	maxSizeVertical?: string;
 }
 
 const isVisible = (el: HTMLElement): boolean =>
@@ -33,18 +36,29 @@ const isVisible = (el: HTMLElement): boolean =>
 const slotted = (slot: HTMLSlotElement | undefined): HTMLElement | undefined =>
 	slot?.assignedElements()[0] as HTMLElement | undefined;
 
+const slotHasVisible = (slot: HTMLSlotElement | undefined): boolean =>
+	slot?.assignedElements().some((el) => isVisible(el as HTMLElement)) ?? false;
+
 const observeVisibility = (
 	host: HTMLElement,
-	previous: HTMLElement,
-	next: HTMLElement,
+	previousPanel: HTMLElement,
+	previousSlot: HTMLSlotElement | undefined,
+	nextPanel: HTMLElement,
+	nextSlot: HTMLSlotElement | undefined,
 ): ResizeObserver => {
 	const update = () => {
-		const both = isVisible(previous) && isVisible(next);
-		host.toggleAttribute('data-single-panel', !both);
+		const prevVisible = slotHasVisible(previousSlot);
+		const nextVisible = slotHasVisible(nextSlot);
+		previousPanel.toggleAttribute('data-hidden', !prevVisible);
+		nextPanel.toggleAttribute('data-hidden', !nextVisible);
+		host.toggleAttribute('data-single-panel', !(prevVisible && nextVisible));
 	};
 	const ro = new ResizeObserver(() => queueMicrotask(update));
-	ro.observe(previous);
-	ro.observe(next);
+	const observeSlot = (slot: HTMLSlotElement | undefined) => {
+		slot?.assignedElements().forEach((el) => ro.observe(el));
+	};
+	observeSlot(previousSlot);
+	observeSlot(nextSlot);
 	update();
 	return ro;
 };
@@ -84,6 +98,66 @@ const applySizeVars = (
 	set('-vertical', vertical);
 };
 
+const setupResize = ({
+	host,
+	handle,
+	direction,
+	persistRef,
+	prevPanelRef,
+	nextPanelRef,
+	prevSlotRef,
+	nextSlotRef,
+}: {
+	host: HTMLElement;
+	handle: HTMLElement | undefined;
+	direction: ResizerDirection;
+	persistRef: {
+		current: ((state: PersistedState) => void) | undefined;
+	};
+	prevPanelRef: { current: HTMLElement | undefined };
+	nextPanelRef: { current: HTMLElement | undefined };
+	prevSlotRef: { current: HTMLSlotElement | undefined };
+	nextSlotRef: { current: HTMLSlotElement | undefined };
+}): (() => void) | undefined => {
+	const previousPanel = prevPanelRef.current;
+	const nextPanel = nextPanelRef.current;
+	const previous = slotted(prevSlotRef.current);
+	const next = slotted(nextSlotRef.current);
+	if (!previousPanel || !nextPanel || !previous || !next || !handle) {
+		return undefined;
+	}
+
+	const handler = createFlexResize({
+		container: host,
+		previous: previousPanel,
+		direction,
+		onResize: (px) => {
+			previousPanel.style.flexBasis = `${px}px`;
+		},
+		onResizeEnd: () => {
+			requestAnimationFrame(() => {
+				const rect = previousPanel.getBoundingClientRect();
+				const actualPx = direction === 'horizontal' ? rect.width : rect.height;
+				persistRef.current?.({ px: actualPx });
+			});
+		},
+	});
+	handle.addEventListener('resize-handle', handler as EventListener);
+
+	const ro = observeVisibility(
+		host,
+		previousPanel,
+		prevSlotRef.current,
+		nextPanel,
+		nextSlotRef.current,
+	);
+
+	return () => {
+		handle.removeEventListener('resize-handle', handler as EventListener);
+		ro.disconnect();
+	};
+};
+
 const ResizableView = ({
 	direction = 'horizontal',
 	persist,
@@ -93,12 +167,17 @@ const ResizableView = ({
 	minSize,
 	minSizeHorizontal,
 	minSizeVertical,
+	maxSize,
+	maxSizeHorizontal,
+	maxSizeVertical,
 }: ResizableViewProps) => {
 	const host = useHost();
 	const handleRef = useRef<HTMLElement>();
 	const prevSlotRef = useRef<HTMLSlotElement>();
 	const nextSlotRef = useRef<HTMLSlotElement>();
 	const defaultSlotRef = useRef<HTMLSlotElement>();
+	const prevPanelRef = useRef<HTMLDivElement>();
+	const nextPanelRef = useRef<HTMLDivElement>();
 	const [panelsReady, setPanelsReady] = useState(false);
 
 	const persistKey = persist ? `${persist}:${direction}` : undefined;
@@ -112,7 +191,7 @@ const ResizableView = ({
 		adapter,
 		persistKey,
 		(state: PersistedState | undefined) => {
-			const previous = slotted(prevSlotRef.current);
+			const previous = prevPanelRef.current;
 			if (!previous) return;
 			restore(previous, state);
 		},
@@ -146,6 +225,7 @@ const ResizableView = ({
 			initialSizeVertical,
 		);
 		applySizeVars(host, 'min', minSize, minSizeHorizontal, minSizeVertical);
+		applySizeVars(host, 'max', maxSize, maxSizeHorizontal, maxSizeVertical);
 	}, [
 		host,
 		initialSize,
@@ -154,56 +234,51 @@ const ResizableView = ({
 		minSize,
 		minSizeHorizontal,
 		minSizeVertical,
+		maxSize,
+		maxSizeHorizontal,
+		maxSizeVertical,
 	]);
 
 	useEffect(() => {
 		if (!panelsReady) return;
 
-		const previous = slotted(prevSlotRef.current);
-		const next = slotted(nextSlotRef.current);
-		const handle = handleRef.current;
-		if (!previous || !next || !handle) return;
-
-		const handler = createFlexResize({
-			container: host,
-			previous,
+		const teardown = setupResize({
+			host,
+			handle: handleRef.current,
 			direction,
-			onResize: (px) => {
-				previous.style.flexBasis = `${px}px`;
-			},
-			onResizeEnd: () => {
-				requestAnimationFrame(() => {
-					const rect = previous.getBoundingClientRect();
-					const actualPx =
-						direction === 'horizontal' ? rect.width : rect.height;
-					persistRef.current?.({ px: actualPx });
-				});
-			},
+			persistRef,
+			prevPanelRef,
+			nextPanelRef,
+			prevSlotRef,
+			nextSlotRef,
 		});
-		handle.addEventListener('resize-handle', handler as EventListener);
 
-		const ro = observeVisibility(host, previous, next);
-
-		return () => {
-			handle.removeEventListener('resize-handle', handler as EventListener);
-			ro.disconnect();
-		};
+		return teardown;
 	}, [direction, adapter, persist, host, panelsReady]);
 
 	return html`<slot
 			${ref(defaultSlotRef)}
 			@slotchange=${onDefaultSlotChange}
-		></slot
-		><slot
-			name="previous"
-			${ref(prevSlotRef)}
-			@slotchange=${onSlotChange}
-		></slot
-		><cosmoz-resize-handle
+		></slot>
+		<div
+			class="panel"
+			data-panel="previous"
+			${ref(prevPanelRef)}
+			part="panel-previous"
+		>
+			<slot
+				name="previous"
+				${ref(prevSlotRef)}
+				@slotchange=${onSlotChange}
+			></slot>
+		</div>
+		<cosmoz-resize-handle
 			direction=${direction}
 			${ref(handleRef)}
-		></cosmoz-resize-handle
-		><slot name="next" ${ref(nextSlotRef)} @slotchange=${onSlotChange}></slot>`;
+		></cosmoz-resize-handle>
+		<div class="panel" data-panel="next" ${ref(nextPanelRef)} part="panel-next">
+			<slot name="next" ${ref(nextSlotRef)} @slotchange=${onSlotChange}></slot>
+		</div>`;
 };
 
 customElements.define(
@@ -219,6 +294,9 @@ customElements.define(
 			'min-size',
 			'min-size-horizontal',
 			'min-size-vertical',
+			'max-size',
+			'max-size-horizontal',
+			'max-size-vertical',
 		],
 	}),
 );
