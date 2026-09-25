@@ -158,6 +158,7 @@ export const CappedInitialSize: Story = {
 		html`<cosmoz-resizable-view
 			style="display:flex; width:1000px; height:300px; border:1px solid #ccc;"
 			initial-size="360px"
+			max-size="360"
 		>
 			<div id="list" slot="previous" style="${panelStyle('#ff6b6b')}">
 				<h3>List (capped at 360px)</h3>
@@ -168,10 +169,23 @@ export const CappedInitialSize: Story = {
 		</cosmoz-resizable-view>`,
 	async play({ canvasElement, step }) {
 		await step('Previous panel capped at 360px', async () => {
+			const el = canvasElement.querySelector(
+				'cosmoz-resizable-view',
+			) as HTMLElement;
+			const handle = el.shadowRoot!.querySelector(
+				'cosmoz-resize-handle',
+			) as HTMLElement;
+			const rect = handle.getBoundingClientRect();
+			const fire = (phase: string, x: number, y: number) =>
+				handle.dispatchEvent(
+					new CustomEvent('resize-handle', {
+						detail: { phase, mousePosition: { x, y } },
+						bubbles: true,
+					}),
+				);
+			fire('start', rect.left, rect.top);
+			fire('move', 900, rect.top);
 			await waitFor(() => {
-				const el = canvasElement.querySelector(
-					'cosmoz-resizable-view',
-				) as HTMLElement;
 				const panel = el.shadowRoot!.querySelector(
 					'.panel[data-panel=\'previous\']',
 				) as HTMLElement;

@@ -72,6 +72,31 @@ export const styles = css`
 		);
 	}
 
+	:host([data-direction='horizontal']) .panel[data-panel='previous'] {
+		max-width: var(
+			--resizable-previous-max-horizontal,
+			var(--resizable-previous-max, none)
+		);
+	}
+	:host([data-direction='horizontal']) .panel[data-panel='next'] {
+		max-width: var(
+			--resizable-next-max-horizontal,
+			var(--resizable-next-max, none)
+		);
+	}
+	:host([data-direction='vertical']) .panel[data-panel='previous'] {
+		max-height: var(
+			--resizable-previous-max-vertical,
+			var(--resizable-previous-max, none)
+		);
+	}
+	:host([data-direction='vertical']) .panel[data-panel='next'] {
+		max-height: var(
+			--resizable-next-max-vertical,
+			var(--resizable-next-max, none)
+		);
+	}
+
 	.panel ::slotted(*) {
 		flex: 1 1 100% !important;
 		min-width: 0 !important;

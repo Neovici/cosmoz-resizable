@@ -8,3 +8,4 @@ Wrap `previous`/`next` slots in shadow-DOM panel `<div>`s so the component owns 
 - Panels apply `contain: layout style`, isolating layout/style invalidation inside each panel.
 - `initial-size` / `min-size` and persisted sizes now style the panel wrappers; new `panel-previous` / `panel-next` `part` attributes expose them for external styling.
 - Hidden-panel behavior: a slotted panel hidden via `display: none` collapses its wrapper to zero size (`data-hidden`) instead of removing it, and `data-single-panel` is still set.
+- New `max-size` attribute (+ `-horizontal` / `-vertical` variants), symmetric with `min-size`: caps the previous/next panel during drag and in layout, replacing the old pattern of capping via CSS `max-width`/`max-height` on slotted children.

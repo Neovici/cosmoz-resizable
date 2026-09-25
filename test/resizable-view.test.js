@@ -393,4 +393,77 @@ describe('cosmoz-resizable-view', () => {
 			'300px',
 		);
 	});
+
+	it('max-size attribute sets max-width on panels in horizontal', async () => {
+		const el = await fixture(
+			html`<cosmoz-resizable-view
+				style="display:flex; width:600px; height:300px;"
+				max-size="360 200"
+			>
+				<div id="prev" slot="previous">prev</div>
+				<div id="next" slot="next">next</div>
+			</cosmoz-resizable-view>`,
+		);
+		await waitUntil(
+			() => el.shadowRoot.querySelector('cosmoz-resize-handle'),
+			undefined,
+			{ timeout: 3000 },
+		);
+		expect(getComputedStyle(getPanel(el, 'previous')).maxWidth).to.equal(
+			'360px',
+		);
+		expect(getComputedStyle(getPanel(el, 'next')).maxWidth).to.equal('200px');
+	});
+
+	it('max-size-vertical overrides in vertical direction', async () => {
+		const el = await fixture(
+			html`<cosmoz-resizable-view
+				style="display:flex; width:600px; height:600px;"
+				direction="vertical"
+				max-size="400"
+				max-size-vertical="250"
+			>
+				<div id="prev" slot="previous">prev</div>
+				<div id="next" slot="next">next</div>
+			</cosmoz-resizable-view>`,
+		);
+		await waitUntil(
+			() => el.shadowRoot.querySelector('cosmoz-resize-handle'),
+			undefined,
+			{ timeout: 3000 },
+		);
+		expect(getComputedStyle(getPanel(el, 'previous')).maxHeight).to.equal(
+			'250px',
+		);
+	});
+
+	it('caps drag at max-size via computed style', async () => {
+		const el = await fixture(
+			html`<cosmoz-resizable-view
+				style="display:flex; width:1000px; height:300px;"
+				max-size="360"
+			>
+				<div id="prev" slot="previous">prev</div>
+				<div id="next" slot="next">next</div>
+			</cosmoz-resizable-view>`,
+		);
+		await waitUntil(
+			() => el.shadowRoot.querySelector('cosmoz-resize-handle'),
+			undefined,
+			{ timeout: 3000 },
+		);
+		const panel = getPanel(el, 'previous');
+		const handle = el.shadowRoot.querySelector('cosmoz-resize-handle');
+		const start = handle.getBoundingClientRect();
+		const fire = (phase, x, y) =>
+			handle.dispatchEvent(
+				new CustomEvent('resize-handle', {
+					detail: { phase, mousePosition: { x, y } },
+					bubbles: true,
+				}),
+			);
+		fire('start', start.left, start.top);
+		fire('move', 900, start.top);
+		expect(panel.getBoundingClientRect().width).to.be.at.most(360);
+	});
 });

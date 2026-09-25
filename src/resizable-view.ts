@@ -25,6 +25,9 @@ interface ResizableViewProps {
 	minSize?: string;
 	minSizeHorizontal?: string;
 	minSizeVertical?: string;
+	maxSize?: string;
+	maxSizeHorizontal?: string;
+	maxSizeVertical?: string;
 }
 
 const isVisible = (el: HTMLElement): boolean =>
@@ -164,6 +167,9 @@ const ResizableView = ({
 	minSize,
 	minSizeHorizontal,
 	minSizeVertical,
+	maxSize,
+	maxSizeHorizontal,
+	maxSizeVertical,
 }: ResizableViewProps) => {
 	const host = useHost();
 	const handleRef = useRef<HTMLElement>();
@@ -219,6 +225,7 @@ const ResizableView = ({
 			initialSizeVertical,
 		);
 		applySizeVars(host, 'min', minSize, minSizeHorizontal, minSizeVertical);
+		applySizeVars(host, 'max', maxSize, maxSizeHorizontal, maxSizeVertical);
 	}, [
 		host,
 		initialSize,
@@ -227,6 +234,9 @@ const ResizableView = ({
 		minSize,
 		minSizeHorizontal,
 		minSizeVertical,
+		maxSize,
+		maxSizeHorizontal,
+		maxSizeVertical,
 	]);
 
 	useEffect(() => {
@@ -284,6 +294,9 @@ customElements.define(
 			'min-size',
 			'min-size-horizontal',
 			'min-size-vertical',
+			'max-size',
+			'max-size-horizontal',
+			'max-size-vertical',
 		],
 	}),
 );
