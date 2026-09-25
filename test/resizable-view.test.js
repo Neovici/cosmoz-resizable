@@ -19,6 +19,9 @@ Object.defineProperty(window, 'onerror', {
 	},
 });
 
+const getPanel = (el, name) =>
+	el.shadowRoot.querySelector(`.panel[data-panel='${name}']`);
+
 describe('cosmoz-resizable-view', () => {
 	it('is defined', async () => {
 		const el = await fixture(
@@ -27,7 +30,7 @@ describe('cosmoz-resizable-view', () => {
 		expect(el.tagName.toLowerCase()).to.equal('cosmoz-resizable-view');
 	});
 
-	it('renders a handle in shadow DOM between named slots', async () => {
+	it('renders handle between wrapped panel divs in shadow DOM', async () => {
 		const el = await fixture(
 			html`<cosmoz-resizable-view>
 				<div id="prev" slot="previous">prev</div>
@@ -47,6 +50,8 @@ describe('cosmoz-resizable-view', () => {
 		expect(nextSlot).to.exist;
 		expect(prevSlot.assignedElements()[0]?.id).to.equal('prev');
 		expect(nextSlot.assignedElements()[0]?.id).to.equal('next');
+		expect(getPanel(el, 'previous')).to.exist;
+		expect(getPanel(el, 'next')).to.exist;
 	});
 
 	it('redirects unslotted children to previous slot', async () => {
@@ -70,7 +75,71 @@ describe('cosmoz-resizable-view', () => {
 		expect(nextSlot.assignedElements()[0]?.id).to.equal('next');
 	});
 
-	it('sets data-single-panel when one panel is display:none', async () => {
+	it('wraps panels with contain: layout style', async () => {
+		const el = await fixture(
+			html`<cosmoz-resizable-view
+				style="display:flex; width:600px; height:300px;"
+			>
+				<div id="prev" slot="previous">prev</div>
+				<div id="next" slot="next">next</div>
+			</cosmoz-resizable-view>`,
+		);
+		await waitUntil(() => getPanel(el, 'previous'), undefined, {
+			timeout: 3000,
+		});
+		expect(getComputedStyle(getPanel(el, 'previous')).contain).to.include(
+			'layout',
+		);
+		expect(getComputedStyle(getPanel(el, 'previous')).contain).to.include(
+			'style',
+		);
+	});
+
+	it('forces slotted content to full panel width', async () => {
+		const el = await fixture(
+			html`<cosmoz-resizable-view
+				style="display:flex; width:600px; height:300px;"
+				initial-size="200px"
+			>
+				<div id="prev" slot="previous">prev</div>
+				<div id="next" slot="next">next</div>
+			</cosmoz-resizable-view>`,
+		);
+		await waitUntil(
+			() => getComputedStyle(getPanel(el, 'previous')).width === '200px',
+			undefined,
+			{ timeout: 3000 },
+		);
+		const prev = el.querySelector('#prev');
+		const panel = getPanel(el, 'previous');
+		expect(prev.offsetWidth).to.equal(panel.clientWidth);
+	});
+
+	it('outside flex styles on slotted content don\'t leak into panel layout', async () => {
+		const el = await fixture(
+			html`<cosmoz-resizable-view
+				style="display:flex; width:600px; height:300px;"
+				initial-size="200px"
+			>
+				<div id="prev" slot="previous" style="flex: 0 0 50%; min-width: 400px;">
+					prev
+				</div>
+				<div id="next" slot="next" style="flex: 2 2 300px;">next</div>
+			</cosmoz-resizable-view>`,
+		);
+		await waitUntil(
+			() => getComputedStyle(getPanel(el, 'previous')).width === '200px',
+			undefined,
+			{ timeout: 3000 },
+		);
+		const panel = getPanel(el, 'previous');
+		const prev = el.querySelector('#prev');
+		// Panel keeps its initial size regardless of the child's flex/min-width.
+		expect(getComputedStyle(panel).flexBasis).to.equal('200px');
+		expect(prev.offsetWidth).to.equal(panel.clientWidth);
+	});
+
+	it('sets data-single-panel and hides wrapper when one panel is display:none', async () => {
 		const el = await fixture(
 			html`<cosmoz-resizable-view
 				style="display:flex; width:600px; height:300px;"
@@ -85,6 +154,7 @@ describe('cosmoz-resizable-view', () => {
 			{ timeout: 3000 },
 		);
 		expect(el.hasAttribute('data-single-panel')).to.be.false;
+		expect(getPanel(el, 'previous').hasAttribute('data-hidden')).to.be.false;
 
 		const prev = el.querySelector('#prev');
 		prev.style.display = 'none';
@@ -92,6 +162,10 @@ describe('cosmoz-resizable-view', () => {
 			timeout: 3000,
 		});
 		expect(el.hasAttribute('data-single-panel')).to.be.true;
+		expect(getPanel(el, 'previous').hasAttribute('data-hidden')).to.be.true;
+		const hiddenPanel = getPanel(el, 'previous');
+		expect(getComputedStyle(hiddenPanel).flexBasis).to.equal('0px');
+		expect(hiddenPanel.offsetWidth).to.equal(0);
 
 		const handle = el.shadowRoot.querySelector('cosmoz-resize-handle');
 		expect(getComputedStyle(handle).display).to.equal('none');
@@ -124,19 +198,19 @@ describe('cosmoz-resizable-view', () => {
 			timeout: 3000,
 		});
 		expect(el.hasAttribute('data-single-panel')).to.be.false;
+		expect(getPanel(el, 'previous').hasAttribute('data-hidden')).to.be.false;
 
 		const handle = el.shadowRoot.querySelector('cosmoz-resize-handle');
 		expect(getComputedStyle(handle).display).to.not.equal('none');
 	});
 
-	it('overrides flex-basis with 0 when data-single-panel is set', async () => {
+	it('gives visible panel flex 1 1 0 when data-single-panel is set', async () => {
 		const el = await fixture(
 			html`<cosmoz-resizable-view
 				style="display:flex; width:600px; height:300px;"
+				initial-size="60%"
 			>
-				<div id="prev" slot="previous" style="background:red; flex-basis: 30%;">
-					prev
-				</div>
+				<div id="prev" slot="previous" style="background:red">prev</div>
 				<div id="next" slot="next" style="background:blue">next</div>
 			</cosmoz-resizable-view>`,
 		);
@@ -151,11 +225,12 @@ describe('cosmoz-resizable-view', () => {
 		await waitUntil(() => el.hasAttribute('data-single-panel'), undefined, {
 			timeout: 3000,
 		});
-		const next = el.querySelector('#next');
-		expect(getComputedStyle(next).flexBasis).to.equal('0px');
+		const nextPanel = getPanel(el, 'next');
+		expect(getComputedStyle(nextPanel).flexGrow).to.equal('1');
+		expect(getComputedStyle(nextPanel).flexBasis).to.equal('0px');
 	});
 
-	it('restores persisted px as flex-basis on mount', async () => {
+	it('restores persisted px as flex-basis on previous panel', async () => {
 		localStorage.setItem(
 			'cosmoz-resizable-view:test-restore:horizontal',
 			JSON.stringify({ px: 250 }),
@@ -169,13 +244,14 @@ describe('cosmoz-resizable-view', () => {
 				<div id="next" slot="next">next</div>
 			</cosmoz-resizable-view>`,
 		);
-		const prev = el.querySelector('#prev');
+		const prevPanel = getPanel(el, 'previous');
 		await waitUntil(
-			() => prev.style.flexBasis === '250px',
+			() => prevPanel.style.flexBasis === '250px',
 			'flex-basis should be restored to 250px',
 			{ timeout: 3000 },
 		);
-		expect(prev.style.flexBasis).to.equal('250px');
+		expect(prevPanel.style.flexBasis).to.equal('250px');
+		expect(el.querySelector('#prev').style.flexBasis).to.equal('');
 		localStorage.removeItem('cosmoz-resizable-view:test-restore:horizontal');
 	});
 
@@ -190,13 +266,13 @@ describe('cosmoz-resizable-view', () => {
 				<div id="next" slot="next">next</div>
 			</cosmoz-resizable-view>`,
 		);
-		const prev = el.querySelector('#prev');
+		const prevPanel = getPanel(el, 'previous');
 		await waitUntil(
-			() => prev.style.flexBasis === '',
+			() => prevPanel.style.flexBasis === '',
 			'flex-basis should be cleared when no stored value',
 			{ timeout: 3000 },
 		);
-		expect(prev.style.flexBasis).to.equal('');
+		expect(prevPanel.style.flexBasis).to.equal('');
 	});
 
 	it('clears stale flexBasis on direction change with no stored value', async () => {
@@ -214,26 +290,26 @@ describe('cosmoz-resizable-view', () => {
 				<div id="next" slot="next">next</div>
 			</cosmoz-resizable-view>`,
 		);
-		const prev = el.querySelector('#prev');
+		const prevPanel = getPanel(el, 'previous');
 		await waitUntil(
-			() => prev.style.flexBasis === '300px',
+			() => prevPanel.style.flexBasis === '300px',
 			'horizontal flex-basis should be restored',
 			{ timeout: 3000 },
 		);
-		expect(prev.style.flexBasis).to.equal('300px');
+		expect(prevPanel.style.flexBasis).to.equal('300px');
 
 		el.setAttribute('direction', 'vertical');
 		await waitUntil(
-			() => prev.style.flexBasis === '',
+			() => prevPanel.style.flexBasis === '',
 			'flex-basis should be cleared after direction change with no vertical stored value',
 			{ timeout: 3000 },
 		);
-		expect(prev.style.flexBasis).to.equal('');
+		expect(prevPanel.style.flexBasis).to.equal('');
 
 		localStorage.removeItem('cosmoz-resizable-view:test-direction:horizontal');
 	});
 
-	it('initial-size attribute sets flex-basis on previous', async () => {
+	it('initial-size attribute sets flex-basis on previous panel', async () => {
 		const el = await fixture(
 			html`<cosmoz-resizable-view
 				style="display:flex; width:600px; height:300px;"
@@ -248,11 +324,12 @@ describe('cosmoz-resizable-view', () => {
 			undefined,
 			{ timeout: 3000 },
 		);
-		const prev = el.querySelector('#prev');
-		expect(getComputedStyle(prev).flexBasis).to.equal('60%');
+		expect(getComputedStyle(getPanel(el, 'previous')).flexBasis).to.equal(
+			'60%',
+		);
 	});
 
-	it('min-size attribute sets min-width in horizontal', async () => {
+	it('min-size attribute sets min-width on panels in horizontal', async () => {
 		const el = await fixture(
 			html`<cosmoz-resizable-view
 				style="display:flex; width:600px; height:300px;"
@@ -267,13 +344,13 @@ describe('cosmoz-resizable-view', () => {
 			undefined,
 			{ timeout: 3000 },
 		);
-		const prev = el.querySelector('#prev');
-		const next = el.querySelector('#next');
-		expect(getComputedStyle(prev).minWidth).to.equal('200px');
-		expect(getComputedStyle(next).minWidth).to.equal('100px');
+		expect(getComputedStyle(getPanel(el, 'previous')).minWidth).to.equal(
+			'200px',
+		);
+		expect(getComputedStyle(getPanel(el, 'next')).minWidth).to.equal('100px');
 	});
 
-	it('single-value min-size applies to previous only', async () => {
+	it('single-value unitless min-size applies to previous panel only', async () => {
 		const el = await fixture(
 			html`<cosmoz-resizable-view
 				style="display:flex; width:600px; height:300px;"
@@ -288,10 +365,11 @@ describe('cosmoz-resizable-view', () => {
 			undefined,
 			{ timeout: 3000 },
 		);
-		const prev = el.querySelector('#prev');
-		const next = el.querySelector('#next');
-		expect(getComputedStyle(prev).minWidth).to.equal('200px');
-		expect(getComputedStyle(next).minWidth).to.equal('0px');
+		// Unitless values get px appended.
+		expect(getComputedStyle(getPanel(el, 'previous')).minWidth).to.equal(
+			'200px',
+		);
+		expect(getComputedStyle(getPanel(el, 'next')).minWidth).to.equal('0px');
 	});
 
 	it('min-size-vertical overrides in vertical direction', async () => {
@@ -311,26 +389,8 @@ describe('cosmoz-resizable-view', () => {
 			undefined,
 			{ timeout: 3000 },
 		);
-		const prev = el.querySelector('#prev');
-		expect(getComputedStyle(prev).minHeight).to.equal('300px');
-	});
-
-	it('unitless min-size values get px appended', async () => {
-		const el = await fixture(
-			html`<cosmoz-resizable-view
-				style="display:flex; width:600px; height:300px;"
-				min-size="200"
-			>
-				<div id="prev" slot="previous">prev</div>
-				<div id="next" slot="next">next</div>
-			</cosmoz-resizable-view>`,
+		expect(getComputedStyle(getPanel(el, 'previous')).minHeight).to.equal(
+			'300px',
 		);
-		await waitUntil(
-			() => el.shadowRoot.querySelector('cosmoz-resize-handle'),
-			undefined,
-			{ timeout: 3000 },
-		);
-		const prev = el.querySelector('#prev');
-		expect(getComputedStyle(prev).minWidth).to.equal('200px');
 	});
 });
