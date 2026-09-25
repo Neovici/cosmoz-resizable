@@ -1,10 +1,10 @@
 export type ResizerDirection = 'horizontal' | 'vertical';
 
 /**
- * Interface implemented by `<cosmoz-resizable-view>` (attribute-reflected
- * props). Augment `HTMLElementTagNameMap` with it for typed lookups.
+ * Props of `<cosmoz-resizable-view>`; implemented by the element (see the
+ * `HTMLElementTagNameMap` augmentation for typed lookups).
  */
-export interface ResizableViewElement {
+export interface ResizableViewProps {
 	direction?: ResizerDirection;
 	persist?: string;
 	initialSize?: string;

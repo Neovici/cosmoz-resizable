@@ -16,24 +16,10 @@ import './resize-handle';
 import { createFlexResize } from './resizers';
 import {
 	PersistedState,
-	ResizableViewElement,
+	ResizableViewProps,
 	ResizeHandleElement,
 	ResizerDirection,
 } from './types';
-
-export interface ResizableViewProps {
-	direction?: ResizerDirection;
-	persist?: string;
-	initialSize?: string;
-	initialSizeHorizontal?: string;
-	initialSizeVertical?: string;
-	minSize?: string;
-	minSizeHorizontal?: string;
-	minSizeVertical?: string;
-	maxSize?: string;
-	maxSizeHorizontal?: string;
-	maxSizeVertical?: string;
-}
 
 const isVisible = (el: HTMLElement): boolean =>
 	getComputedStyle(el).display !== 'none';
@@ -288,7 +274,7 @@ const ResizableView = ({
 
 declare global {
 	interface HTMLElementTagNameMap {
-		'cosmoz-resizable-view': HTMLElement & ResizableViewElement;
+		'cosmoz-resizable-view': HTMLElement & ResizableViewProps;
 		'cosmoz-resize-handle': HTMLElement & ResizeHandleElement;
 	}
 }

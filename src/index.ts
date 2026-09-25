@@ -7,7 +7,7 @@ export type {
 	MousePosition,
 	PersistAdapter,
 	PersistedState,
-	ResizableViewElement,
+	ResizableViewProps,
 	ResizeConfig,
 	ResizeEventDetail,
 	ResizeHandleElement,
