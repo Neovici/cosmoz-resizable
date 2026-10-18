@@ -1,5 +1,11 @@
 # @neovici/cosmoz-resizable
 
+## 2.3.2
+
+### Patch Changes
+
+- 054cf23: Let a single visible panel fit its container without split-pane minimum sizes.
+
 ## 2.3.1
 
 ### Patch Changes
