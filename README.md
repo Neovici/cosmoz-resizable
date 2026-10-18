@@ -155,6 +155,8 @@ cosmoz-resizable-view::part(panel-previous) {
 }
 ```
 
+Hover uses `--cz-color-border-primary`; dragging uses `--cz-color-border-brand`. Both states keep a one-pixel line. The `--cz-accent-color` fallback supports consumers without Cosmoz tokens. The wider resize hit area is unchanged.
+
 ### CSS custom properties
 
 | Property                                     | Default | Description                      |
