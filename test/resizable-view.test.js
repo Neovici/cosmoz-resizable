@@ -115,7 +115,7 @@ describe('cosmoz-resizable-view', () => {
 		expect(prev.offsetWidth).to.equal(panel.clientWidth);
 	});
 
-	it('outside flex styles on slotted content don\'t leak into panel layout', async () => {
+	it('outside flex styles on slotted content do not leak into panel layout', async () => {
 		const el = await fixture(
 			html`<cosmoz-resizable-view
 				style="display:flex; width:600px; height:300px;"
@@ -578,3 +578,29 @@ describe('cosmoz-resizable-view', () => {
 		);
 	});
 });
+
+for (const direction of ['horizontal', 'vertical']) {
+	for (const hiddenSide of ['previous', 'next']) {
+		it(`fits the ${direction} viewport when ${hiddenSide} is hidden despite split minimums`, async () => {
+			const el = await fixture(
+				html`<cosmoz-resizable-view
+					direction=${direction}
+					min-size="500 400"
+					style="width:300px;height:300px"
+				>
+					<div slot="previous" ?hidden=${hiddenSide === 'previous'}>
+						Previous
+					</div>
+					<div slot="next" ?hidden=${hiddenSide === 'next'}>Next</div>
+				</cosmoz-resizable-view>`,
+			);
+			await waitUntil(() => el.hasAttribute('data-single-panel'));
+			const visible = el
+				.querySelector('[slot]:not([hidden])')
+				.getBoundingClientRect();
+			const bounds = el.getBoundingClientRect();
+			expect(visible.width).to.be.closeTo(bounds.width, 1);
+			expect(visible.height).to.be.closeTo(bounds.height, 1);
+		});
+	}
+}

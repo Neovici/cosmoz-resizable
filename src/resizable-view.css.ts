@@ -112,6 +112,8 @@ export const styles = css`
 	}
 
 	:host([data-single-panel]) .panel:not([data-hidden]) {
+		min-width: 0;
+		min-height: 0;
 		flex: 1 1 0 !important;
 	}
 
