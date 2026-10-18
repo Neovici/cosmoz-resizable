@@ -169,8 +169,7 @@ export const ReversedDemo: Story = {
 		</cosmoz-resizable-view>`,
 	async play({ canvasElement, step }) {
 		// Typed via the HTMLElementTagNameMap augmentation.
-		const getView = () =>
-			canvasElement.querySelector('cosmoz-resizable-view')!;
+		const getView = () => canvasElement.querySelector('cosmoz-resizable-view')!;
 		const getPanel = () =>
 			getView().shadowRoot!.querySelector(
 				'.panel[data-panel=\'previous\']',
@@ -286,5 +285,28 @@ export const CappedInitialSize: Story = {
 				expect(panel.offsetWidth).toBeLessThanOrEqual(360);
 			});
 		});
+	},
+};
+
+export const ThinDragFeedback: Story = {
+	render: () =>
+		html`<cosmoz-resize-handle
+			style="height: 160px; min-height: 160px;
+			--cz-color-border-primary: rgb(120 125 135);
+			--cz-color-border-brand: rgb(115 94 177);
+			--cz-accent-color: rgb(200 0 255);"
+		></cosmoz-resize-handle>`,
+	async play({ canvasElement }) {
+		const handle = canvasElement.querySelector('cosmoz-resize-handle')!;
+		await waitFor(() =>
+			expect(handle.hasAttribute('data-direction')).toBe(true),
+		);
+		handle.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+		expect(getComputedStyle(handle, '::before').backgroundColor).toBe(
+			'rgb(115, 94, 177)',
+		);
+		expect(getComputedStyle(handle, '::before').boxShadow).toBe('none');
+		document.dispatchEvent(new MouseEvent('mouseup'));
+		expect(handle.hasAttribute('data-dragging')).toBe(false);
 	},
 };

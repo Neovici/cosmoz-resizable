@@ -63,19 +63,11 @@ export const styles = css`
 		bottom: -2px;
 	}
 
-	:host([reversed][data-direction='vertical']:hover)::before,
-	:host([reversed][data-direction='vertical'][data-dragging])::before {
-		box-shadow: 0 1px 0 1px var(--cz-accent-color);
+	:host(:hover)::before {
+		background: var(--cz-color-border-primary, var(--cz-accent-color));
 	}
 
-	:host(:hover)::before,
 	:host([data-dragging])::before {
-		background: var(--cz-accent-color);
-		box-shadow: -1px 0 0 1px var(--cz-accent-color);
-	}
-
-	:host([data-direction='vertical']:hover)::before,
-	:host([data-direction='vertical'][data-dragging])::before {
-		box-shadow: 0 -1px 0 1px var(--cz-accent-color);
+		background: var(--cz-color-border-brand, var(--cz-accent-color));
 	}
 `;
