@@ -115,7 +115,7 @@ describe('cosmoz-resizable-view', () => {
 		expect(prev.offsetWidth).to.equal(panel.clientWidth);
 	});
 
-	it("outside flex styles on slotted content don't leak into panel layout", async () => {
+	it('outside flex styles on slotted content do not leak into panel layout', async () => {
 		const el = await fixture(
 			html`<cosmoz-resizable-view
 				style="display:flex; width:600px; height:300px;"
