@@ -1,5 +1,11 @@
 # @neovici/cosmoz-resizable
 
+## 2.3.1
+
+### Patch Changes
+
+- 61a104d: Use a thin neutral divider on hover and a thin brand divider while dragging. Keep the existing resize hit area and legacy accent fallback.
+
 ## 2.3.0
 
 ### Minor Changes
