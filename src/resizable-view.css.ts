@@ -113,6 +113,8 @@ export const styles = css`
 
 	:host([data-single-panel]) .panel:not([data-hidden]) {
 		flex: 1 1 0 !important;
+		min-width: 0;
+		min-height: 0;
 	}
 
 	cosmoz-resize-handle {
