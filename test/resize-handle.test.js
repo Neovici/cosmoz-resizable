@@ -159,4 +159,60 @@ describe('cosmoz-resize-handle', () => {
 		expect(phases).to.deep.equal(['start', 'move', 'end']);
 		expect(el.hasAttribute('data-dragging')).to.be.false;
 	});
+
+	describe('label tooltip', () => {
+		const hover = (el, type, x = 0, y = 120) =>
+			el.dispatchEvent(
+				new PointerEvent(type, {
+					pointerType: 'mouse',
+					clientX: x,
+					clientY: y,
+				}),
+			);
+		const tipOf = (el) => el.shadowRoot.querySelector('[popover]');
+		const isOpen = (el) => tipOf(el)?.matches(':popover-open') ?? false;
+
+		it('renders no tooltip without a label', async () => {
+			const el = await fixture(
+				html`<cosmoz-resize-handle></cosmoz-resize-handle>`,
+			);
+			await waitUntil(() => el.hasAttribute('data-direction'));
+			expect(tipOf(el)).to.be.null;
+		});
+
+		it('shows the label after hovering and hides it on leave', async () => {
+			const el = await fixture(
+				html`<div style="display:flex;height:300px">
+					<cosmoz-resize-handle label="Drag to resize"></cosmoz-resize-handle>
+				</div>`,
+			).then((c) => c.querySelector('cosmoz-resize-handle'));
+			await waitUntil(() => tipOf(el));
+			expect(tipOf(el).textContent).to.equal('Drag to resize');
+
+			hover(el, 'pointerenter');
+			expect(isOpen(el)).to.be.false;
+			await waitUntil(() => isOpen(el), 'tooltip did not open', {
+				timeout: 2000,
+			});
+			const tip = tipOf(el).getBoundingClientRect();
+			expect(tip.left).to.be.greaterThan(el.getBoundingClientRect().right);
+			expect(tip.top + tip.height / 2).to.be.closeTo(120, 1);
+
+			hover(el, 'pointerleave');
+			expect(isOpen(el)).to.be.false;
+		});
+
+		it('does not show the label once dragging starts', async () => {
+			const el = await fixture(
+				html`<cosmoz-resize-handle
+					label="Drag to resize"
+				></cosmoz-resize-handle>`,
+			);
+			await waitUntil(() => tipOf(el));
+			hover(el, 'pointerenter');
+			hover(el, 'pointerdown');
+			await new Promise((r) => setTimeout(r, 800));
+			expect(isOpen(el)).to.be.false;
+		});
+	});
 });

@@ -74,6 +74,7 @@ handle.addEventListener(
 | ------------------------- | ------- | ------------ | --------------------------------------------------------------- |
 | `direction`               | string  | `horizontal` | Split direction: `horizontal` (col-resize) or `vertical`        |
 | `reversed`                | boolean | `false`      | Flip visual order: previous panel renders on the right/bottom   |
+| `handle-label`            | string  | -            | Tooltip shown next to the pointer after hovering the handle     |
 | `persist`                 | string  | —            | Persistence key; stores the previous panel size in localStorage |
 | `initial-size`            | string  | —            | Initial panel sizes (see Size values)                           |
 | `initial-size-horizontal` | string  | —            | Override for `direction="horizontal"`                           |
@@ -159,17 +160,20 @@ Hover uses `--cz-color-border-primary`; dragging uses `--cz-color-border-brand`.
 
 ### CSS custom properties
 
-| Property                                     | Default | Description                      |
-| -------------------------------------------- | ------- | -------------------------------- |
-| `--cosmoz-resize-handle-size`                | `2px`   | Width/height of the drag handle  |
-| `--resizable-previous-basis`                 | `auto`  | Flex-basis of the previous panel |
-| `--resizable-next-basis`                     | `0`     | Flex-basis of the next panel     |
-| `--resizable-{previous,next}-min`            | `0`     | Panel minimum size (active axis) |
-| `--resizable-{previous,next}-min-horizontal` |         | Horizontal-direction override    |
-| `--resizable-{previous,next}-min-vertical`   |         | Vertical-direction override      |
-| `--resizable-{previous,next}-max`            | `none`  | Panel maximum size (active axis) |
-| `--resizable-{previous,next}-max-horizontal` |         | Horizontal-direction override    |
-| `--resizable-{previous,next}-max-vertical`   |         | Vertical-direction override      |
+| Property                                     | Default                     | Description                      |
+| -------------------------------------------- | --------------------------- | -------------------------------- |
+| `--cosmoz-resize-handle-size`                | `1px`                       | Width/height of the drag handle  |
+| `--cosmoz-resize-handle-hit-area`            | `4px`                       | Extra grab area on each side     |
+| `--cosmoz-resize-handle-hover-color`         | `--cz-color-border-primary` | Line colour on hover             |
+| `--cosmoz-resize-handle-active-color`        | `--cz-color-border-brand`   | Line colour while dragging       |
+| `--resizable-previous-basis`                 | `auto`                      | Flex-basis of the previous panel |
+| `--resizable-next-basis`                     | `0`                         | Flex-basis of the next panel     |
+| `--resizable-{previous,next}-min`            | `0`                         | Panel minimum size (active axis) |
+| `--resizable-{previous,next}-min-horizontal` |                             | Horizontal-direction override    |
+| `--resizable-{previous,next}-min-vertical`   |                             | Vertical-direction override      |
+| `--resizable-{previous,next}-max`            | `none`                      | Panel maximum size (active axis) |
+| `--resizable-{previous,next}-max-horizontal` |                             | Horizontal-direction override    |
+| `--resizable-{previous,next}-max-vertical`   |                             | Vertical-direction override      |
 
 The attributes above set these custom properties on the host; you can also set them directly for CSS-only integrations.
 

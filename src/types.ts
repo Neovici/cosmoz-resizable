@@ -11,6 +11,10 @@ export interface ResizableViewProps {
 	 */
 	reversed?: boolean;
 	persist?: string;
+	/**
+	 * Tooltip shown when hovering the handle, e.g. "Drag to resize".
+	 */
+	handleLabel?: string;
 	initialSize?: string;
 	initialSizeHorizontal?: string;
 	initialSizeVertical?: string;
@@ -33,6 +37,10 @@ export interface ResizeHandleProps {
 	 * readable in JS. Rendering only needs CSS `:host([reversed])`.
 	 */
 	reversed?: boolean;
+	/**
+	 * Tooltip shown next to the pointer after hovering the handle.
+	 */
+	label?: string;
 }
 
 export interface MousePosition {

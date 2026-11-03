@@ -8,6 +8,7 @@ import {
 	useState,
 } from '@pionjs/pion';
 import { html } from 'lit-html';
+import { ifDefined } from 'lit-html/directives/if-defined.js';
 import { ref } from 'lit-html/directives/ref.js';
 import { localStorageAdapter, usePersist } from './hooks/use-persist';
 import { parseSizeAttr } from './parse-size';
@@ -165,6 +166,7 @@ const ResizableView = ({
 	direction = 'horizontal',
 	reversed,
 	persist,
+	handleLabel,
 	initialSize,
 	initialSizeHorizontal,
 	initialSizeVertical,
@@ -280,6 +282,7 @@ const ResizableView = ({
 		<cosmoz-resize-handle
 			direction=${direction}
 			?reversed=${reversed === true}
+			label=${ifDefined(handleLabel)}
 			${ref(handleRef)}
 		></cosmoz-resize-handle>
 		<div class="panel" data-panel="next" ${ref(nextPanelRef)} part="panel-next">
@@ -302,6 +305,7 @@ customElements.define(
 			'direction',
 			'reversed',
 			'persist',
+			'handle-label',
 			'initial-size',
 			'initial-size-horizontal',
 			'initial-size-vertical',

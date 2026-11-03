@@ -610,6 +610,21 @@ describe('cosmoz-resizable-view', () => {
 			el.getBoundingClientRect().left,
 		);
 	});
+
+	it('forwards handle-label to the handle', async () => {
+		const el = await fixture(
+			html`<cosmoz-resizable-view handle-label="Drag to resize">
+				<div slot="previous">A</div>
+				<div slot="next">B</div>
+			</cosmoz-resizable-view>`,
+		);
+		await waitUntil(() =>
+			el.shadowRoot.querySelector('cosmoz-resize-handle[label]'),
+		);
+		expect(
+			el.shadowRoot.querySelector('cosmoz-resize-handle').getAttribute('label'),
+		).to.equal('Drag to resize');
+	});
 });
 
 for (const direction of ['horizontal', 'vertical']) {
