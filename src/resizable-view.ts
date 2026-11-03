@@ -136,7 +136,15 @@ const setupResize = ({
 			});
 		},
 	});
+	// The handle trails the pointer by a frame, so mid-drag the pointer sweeps
+	// over panel content and flickers its hover styles and cursor.
+	const onPhase = (e: Event) =>
+		host.toggleAttribute(
+			'data-resizing',
+			(e as CustomEvent<{ phase: string }>).detail.phase !== 'end',
+		);
 	handle.addEventListener('resize-handle', handler as EventListener);
+	handle.addEventListener('resize-handle', onPhase);
 
 	const ro = observeVisibility(
 		host,
@@ -148,6 +156,8 @@ const setupResize = ({
 
 	return () => {
 		handle.removeEventListener('resize-handle', handler as EventListener);
+		handle.removeEventListener('resize-handle', onPhase);
+		host.removeAttribute('data-resizing');
 		ro.disconnect();
 	};
 };

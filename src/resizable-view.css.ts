@@ -121,6 +121,16 @@ export const styles = css`
 		flex: 0 0 auto;
 	}
 
+	:host([data-resizing]) {
+		cursor: col-resize;
+	}
+	:host([data-resizing][data-direction='vertical']) {
+		cursor: row-resize;
+	}
+	:host([data-resizing]) .panel {
+		pointer-events: none;
+	}
+
 	:host([data-single-panel]) cosmoz-resize-handle {
 		display: none;
 	}
