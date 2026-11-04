@@ -1,5 +1,11 @@
 # @neovici/cosmoz-resizable
 
+## 2.3.3
+
+### Patch Changes
+
+- efbb308: Stop panel content from flickering hover styles and cursors during a drag: panels ignore the pointer while a resize is in progress.
+
 ## 2.3.2
 
 ### Patch Changes
