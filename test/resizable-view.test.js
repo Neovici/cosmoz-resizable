@@ -467,6 +467,39 @@ describe('cosmoz-resizable-view', () => {
 		expect(panel.getBoundingClientRect().width).to.be.at.most(360);
 	});
 
+	it('keeps the pointer off panel content while dragging', async () => {
+		const el = await fixture(
+			html`<cosmoz-resizable-view
+				style="display:flex; width:600px; height:300px;"
+				initial-size="300px"
+			>
+				<div id="prev" slot="previous">prev</div>
+				<div id="next" slot="next">next</div>
+			</cosmoz-resizable-view>`,
+		);
+		await waitUntil(
+			() => el.shadowRoot.querySelector('cosmoz-resize-handle'),
+			undefined,
+			{ timeout: 3000 },
+		);
+		const handle = el.shadowRoot.querySelector('cosmoz-resize-handle');
+		const prev = el.querySelector('#prev');
+		const { left, top } = el.getBoundingClientRect();
+		const hit = () => document.elementFromPoint(left + 50, top + 50);
+		const fire = (phase) =>
+			handle.dispatchEvent(
+				new CustomEvent('resize-handle', {
+					detail: { phase, mousePosition: { x: left + 50, y: top + 50 } },
+					bubbles: true,
+				}),
+			);
+		expect(hit()).to.equal(prev);
+		fire('start');
+		expect(hit()).to.not.equal(prev);
+		fire('end');
+		expect(hit()).to.equal(prev);
+	});
+
 	it('reversed sets flex-direction row-reverse and data-reversed', async () => {
 		const el = await fixture(
 			html`<cosmoz-resizable-view

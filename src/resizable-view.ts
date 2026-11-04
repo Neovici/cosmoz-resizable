@@ -17,6 +17,7 @@ import { createFlexResize } from './resizers';
 import {
 	PersistedState,
 	ResizableViewProps,
+	ResizeEventDetail,
 	ResizeHandleProps,
 	ResizerDirection,
 } from './types';
@@ -136,7 +137,13 @@ const setupResize = ({
 			});
 		},
 	});
+	const reflectResizing = (e: Event) =>
+		host.toggleAttribute(
+			'data-resizing',
+			(e as CustomEvent<ResizeEventDetail>).detail.phase !== 'end',
+		);
 	handle.addEventListener('resize-handle', handler as EventListener);
+	handle.addEventListener('resize-handle', reflectResizing);
 
 	const ro = observeVisibility(
 		host,
@@ -148,6 +155,8 @@ const setupResize = ({
 
 	return () => {
 		handle.removeEventListener('resize-handle', handler as EventListener);
+		handle.removeEventListener('resize-handle', reflectResizing);
+		host.removeAttribute('data-resizing');
 		ro.disconnect();
 	};
 };
