@@ -17,6 +17,7 @@ import { createFlexResize } from './resizers';
 import {
 	PersistedState,
 	ResizableViewProps,
+	ResizeEventDetail,
 	ResizeHandleProps,
 	ResizerDirection,
 } from './types';
@@ -136,15 +137,13 @@ const setupResize = ({
 			});
 		},
 	});
-	// The handle trails the pointer by a frame, so mid-drag the pointer sweeps
-	// over panel content and flickers its hover styles and cursor.
-	const onPhase = (e: Event) =>
+	const reflectResizing = (e: Event) =>
 		host.toggleAttribute(
 			'data-resizing',
-			(e as CustomEvent<{ phase: string }>).detail.phase !== 'end',
+			(e as CustomEvent<ResizeEventDetail>).detail.phase !== 'end',
 		);
 	handle.addEventListener('resize-handle', handler as EventListener);
-	handle.addEventListener('resize-handle', onPhase);
+	handle.addEventListener('resize-handle', reflectResizing);
 
 	const ro = observeVisibility(
 		host,
@@ -156,7 +155,7 @@ const setupResize = ({
 
 	return () => {
 		handle.removeEventListener('resize-handle', handler as EventListener);
-		handle.removeEventListener('resize-handle', onPhase);
+		handle.removeEventListener('resize-handle', reflectResizing);
 		host.removeAttribute('data-resizing');
 		ro.disconnect();
 	};
