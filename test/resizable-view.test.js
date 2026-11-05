@@ -610,6 +610,56 @@ describe('cosmoz-resizable-view', () => {
 			el.getBoundingClientRect().left,
 		);
 	});
+
+	describe('handle-label', () => {
+		const setup = (label) =>
+			fixture(
+				label
+					? html`<cosmoz-resizable-view handle-label=${label}>
+							<div slot="previous">A</div>
+							<div slot="next">B</div>
+						</cosmoz-resizable-view>`
+					: html`<cosmoz-resizable-view>
+							<div slot="previous">A</div>
+							<div slot="next">B</div>
+						</cosmoz-resizable-view>`,
+			);
+		const pointer = (el, type) =>
+			el.dispatchEvent(
+				new PointerEvent(type, {
+					pointerType: 'mouse',
+					bubbles: true,
+					composed: true,
+				}),
+			);
+		const tip = (el) =>
+			el.shadowRoot.querySelector('[data-for="resize-handle"]');
+		const isOpen = (el) => tip(el)?.matches(':popover-open') ?? false;
+
+		it('renders no tooltip without a label', async () => {
+			const el = await setup();
+			await waitUntil(() =>
+				el.shadowRoot.querySelector('cosmoz-resize-handle'),
+			);
+			expect(el.shadowRoot.querySelector('cosmoz-tooltip')).to.be.null;
+		});
+
+		it('shows the label after hovering the handle', async () => {
+			const el = await setup('Drag to resize');
+			await waitUntil(() => tip(el));
+			const handle = el.shadowRoot.querySelector('cosmoz-resize-handle');
+			expect(tip(el).textContent.trim()).to.equal('Drag to resize');
+
+			pointer(handle, 'pointerover');
+			expect(isOpen(el)).to.be.false;
+			await waitUntil(() => isOpen(el), 'tooltip did not open', {
+				timeout: 2000,
+			});
+
+			pointer(handle, 'pointerout');
+			expect(isOpen(el)).to.be.false;
+		});
+	});
 });
 
 for (const direction of ['horizontal', 'vertical']) {

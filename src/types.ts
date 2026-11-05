@@ -11,6 +11,10 @@ export interface ResizableViewProps {
 	 */
 	reversed?: boolean;
 	persist?: string;
+	/**
+	 * Tooltip shown after hovering the handle, e.g. "Drag to resize".
+	 */
+	handleLabel?: string;
 	initialSize?: string;
 	initialSizeHorizontal?: string;
 	initialSizeVertical?: string;

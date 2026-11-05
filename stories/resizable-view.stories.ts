@@ -21,6 +21,7 @@ export const BasicDemo: Story = {
 		html`<cosmoz-resizable-view
 			style="display:flex; width:600px; height:300px; border:1px solid #ccc;"
 			initial-size="50%"
+			handle-label="Drag to resize"
 		>
 			<div slot="previous" id="prev" style="${panelStyle('#ff6b6b')}">
 				<h3>Left Panel</h3>
@@ -306,6 +307,7 @@ export const ThinDragFeedback: Story = {
 			'rgb(115, 94, 177)',
 		);
 		expect(getComputedStyle(handle, '::before').boxShadow).toBe('none');
+		expect(handle.getBoundingClientRect().width).toBe(1);
 		document.dispatchEvent(new MouseEvent('mouseup'));
 		expect(handle.hasAttribute('data-dragging')).toBe(false);
 	},

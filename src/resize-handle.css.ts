@@ -16,22 +16,20 @@ export const styles = css`
 		flex: none;
 		background: var(--cz-queue-gutter-bg, var(--cz-header-bg-color, #bbb));
 		pointer-events: none;
+		transition: background 150ms ease;
 	}
 
 	:host::after {
 		content: '';
 		position: absolute;
-		top: 0;
-		left: -2px;
-		right: -2px;
-		bottom: 0;
+		inset: 0;
 	}
 
 	:host([data-direction='horizontal']) {
 		flex-direction: column;
 		align-items: center;
 		min-height: 100%;
-		width: var(--cosmoz-resize-handle-size, 2px);
+		width: var(--cosmoz-resize-handle-size, 1px);
 		cursor: col-resize;
 	}
 
@@ -40,10 +38,14 @@ export const styles = css`
 		flex: 1;
 	}
 
+	:host([data-direction='horizontal'])::after {
+		inset-inline: calc(var(--cosmoz-resize-handle-hit-area, 4px) * -1);
+	}
+
 	:host([data-direction='vertical']) {
 		flex-direction: row;
 		align-items: center;
-		height: var(--cosmoz-resize-handle-size, 2px);
+		height: var(--cosmoz-resize-handle-size, 1px);
 		width: 100%;
 		cursor: row-resize;
 	}
@@ -53,21 +55,23 @@ export const styles = css`
 		flex: 1;
 	}
 
-	:host([reversed][data-direction='horizontal'])::after {
-		left: 2px;
-		right: -2px;
-	}
-
-	:host([reversed][data-direction='vertical'])::after {
-		top: 2px;
-		bottom: -2px;
+	:host([data-direction='vertical'])::after {
+		inset-block: calc(var(--cosmoz-resize-handle-hit-area, 4px) * -1);
 	}
 
 	:host(:hover)::before {
-		background: var(--cz-color-border-primary, var(--cz-accent-color));
+		background: var(
+			--cosmoz-resize-handle-hover-color,
+			var(--cz-color-border-primary, var(--cz-accent-color))
+		);
+		transition-delay: 150ms;
 	}
 
 	:host([data-dragging])::before {
-		background: var(--cz-color-border-brand, var(--cz-accent-color));
+		background: var(
+			--cosmoz-resize-handle-active-color,
+			var(--cz-color-border-brand, var(--cz-accent-color))
+		);
+		transition-delay: 0s;
 	}
 `;
