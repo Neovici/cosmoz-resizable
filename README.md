@@ -74,7 +74,7 @@ handle.addEventListener(
 | ------------------------- | ------- | ------------ | --------------------------------------------------------------- |
 | `direction`               | string  | `horizontal` | Split direction: `horizontal` (col-resize) or `vertical`        |
 | `reversed`                | boolean | `false`      | Flip visual order: previous panel renders on the right/bottom   |
-| `handle-label`            | string  | -            | Tooltip shown next to the pointer after hovering the handle     |
+| `handle-label`            | string  | -            | Tooltip shown next to the handle after hovering it              |
 | `persist`                 | string  | —            | Persistence key; stores the previous panel size in localStorage |
 | `initial-size`            | string  | —            | Initial panel sizes (see Size values)                           |
 | `initial-size-horizontal` | string  | —            | Override for `direction="horizontal"`                           |

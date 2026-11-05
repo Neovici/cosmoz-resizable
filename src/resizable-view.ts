@@ -1,3 +1,4 @@
+import '@neovici/cosmoz-tooltip';
 import {
 	component,
 	useCallback,
@@ -7,8 +8,7 @@ import {
 	useRef,
 	useState,
 } from '@pionjs/pion';
-import { html } from 'lit-html';
-import { ifDefined } from 'lit-html/directives/if-defined.js';
+import { html, nothing } from 'lit-html';
 import { ref } from 'lit-html/directives/ref.js';
 import { localStorageAdapter, usePersist } from './hooks/use-persist';
 import { parseSizeAttr } from './parse-size';
@@ -279,10 +279,18 @@ const ResizableView = ({
 				@slotchange=${onSlotChange}
 			></slot>
 		</div>
+		${handleLabel
+			? html`<cosmoz-tooltip
+					for="resize-handle"
+					delay="600"
+					placement=${direction === 'horizontal' ? 'right' : 'bottom'}
+					description=${handleLabel}
+				></cosmoz-tooltip>`
+			: nothing}
 		<cosmoz-resize-handle
+			name="resize-handle"
 			direction=${direction}
 			?reversed=${reversed === true}
-			label=${ifDefined(handleLabel)}
 			${ref(handleRef)}
 		></cosmoz-resize-handle>
 		<div class="panel" data-panel="next" ${ref(nextPanelRef)} part="panel-next">

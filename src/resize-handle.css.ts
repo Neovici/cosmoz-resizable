@@ -74,29 +74,4 @@ export const styles = css`
 		);
 		transition-delay: 0s;
 	}
-
-	[popover] {
-		position: fixed;
-		inset: unset;
-		margin: 0;
-		border: none;
-		pointer-events: none;
-		white-space: nowrap;
-		padding: var(--cosmoz-tooltip-padding, 4px 8px);
-		border-radius: var(
-			--cosmoz-tooltip-border-radius,
-			var(--cz-radius-sm, 6px)
-		);
-		box-shadow: var(--cosmoz-tooltip-box-shadow, var(--cz-shadow-lg));
-		background: var(
-			--cosmoz-tooltip-bg-color,
-			var(--cz-color-gray-900, #18181b)
-		);
-		color: var(--cosmoz-tooltip-text-color, var(--cz-color-white, #fff));
-		font-size: var(--cosmoz-tooltip-font-size, var(--cz-text-xs, 12px));
-		line-height: var(
-			--cosmoz-tooltip-line-height,
-			var(--cz-text-xs-line-height, 16px)
-		);
-	}
 `;
