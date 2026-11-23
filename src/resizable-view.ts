@@ -38,7 +38,8 @@ const observeVisibility = (
 	previousSlot: HTMLSlotElement | undefined,
 	nextPanel: HTMLElement,
 	nextSlot: HTMLSlotElement | undefined,
-): ResizeObserver => {
+): (() => void) => {
+	const slots = [previousSlot, nextSlot];
 	const update = () => {
 		const prevVisible = slotHasVisible(previousSlot);
 		const nextVisible = slotHasVisible(nextSlot);
@@ -47,13 +48,21 @@ const observeVisibility = (
 		host.toggleAttribute('data-single-panel', !(prevVisible && nextVisible));
 	};
 	const ro = new ResizeObserver(() => queueMicrotask(update));
-	const observeSlot = (slot: HTMLSlotElement | undefined) => {
-		slot?.assignedElements().forEach((el) => ro.observe(el));
+	// Slotted content can be swapped after setup (e.g. a loader replaced by the
+	// real content); observe whatever is slotted now.
+	const observe = () => {
+		ro.disconnect();
+		slots.forEach((slot) =>
+			slot?.assignedElements().forEach((el) => ro.observe(el)),
+		);
+		update();
 	};
-	observeSlot(previousSlot);
-	observeSlot(nextSlot);
-	update();
-	return ro;
+	slots.forEach((slot) => slot?.addEventListener('slotchange', observe));
+	observe();
+	return () => {
+		slots.forEach((slot) => slot?.removeEventListener('slotchange', observe));
+		ro.disconnect();
+	};
 };
 
 const restore = (previous: HTMLElement, state: PersistedState | undefined) => {
@@ -146,7 +155,7 @@ const setupResize = ({
 	handle.addEventListener('resize-handle', handler as EventListener);
 	handle.addEventListener('resize-handle', reflectResizing);
 
-	const ro = observeVisibility(
+	const stopObserving = observeVisibility(
 		host,
 		previousPanel,
 		prevSlotRef.current,
@@ -158,7 +167,7 @@ const setupResize = ({
 		handle.removeEventListener('resize-handle', handler as EventListener);
 		handle.removeEventListener('resize-handle', reflectResizing);
 		host.removeAttribute('data-resizing');
-		ro.disconnect();
+		stopObserving();
 	};
 };
 
