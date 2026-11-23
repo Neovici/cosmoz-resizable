@@ -171,6 +171,36 @@ describe('cosmoz-resizable-view', () => {
 		expect(getComputedStyle(handle).display).to.equal('none');
 	});
 
+	it('hides a panel whose content was swapped after setup', async () => {
+		const el = await fixture(
+			html`<cosmoz-resizable-view
+				initial-size="50%"
+				style="display:flex; width:600px; height:300px;"
+			>
+				<div id="loader" slot="previous">loading</div>
+				<div id="next" slot="next">next</div>
+			</cosmoz-resizable-view>`,
+		);
+		await waitUntil(
+			() => el.shadowRoot.querySelector('cosmoz-resize-handle'),
+			undefined,
+			{ timeout: 3000 },
+		);
+
+		const list = document.createElement('div');
+		list.slot = 'previous';
+		list.textContent = 'list';
+		el.querySelector('#loader').replaceWith(list);
+		await waitUntil(() => !el.hasAttribute('data-single-panel'));
+		await new Promise((resolve) => setTimeout(resolve, 100));
+
+		list.style.display = 'none';
+		await waitUntil(() => el.hasAttribute('data-single-panel'), undefined, {
+			timeout: 3000,
+		});
+		expect(getPanel(el, 'previous').hasAttribute('data-hidden')).to.be.true;
+	});
+
 	it('removes data-single-panel when panel becomes visible again', async () => {
 		const el = await fixture(
 			html`<cosmoz-resizable-view
