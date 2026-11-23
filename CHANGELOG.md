@@ -1,5 +1,11 @@
 # @neovici/cosmoz-resizable
 
+## 2.4.1
+
+### Patch Changes
+
+- 1f12199: Collapse a panel whose slotted content was swapped after setup (e.g. a loader replaced by the real content) when that content is hidden.
+
 ## 2.4.0
 
 ### Minor Changes
